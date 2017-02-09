@@ -1,0 +1,47 @@
+{
+	"ImportPath": "github.com/thekb/thanos",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v74",
+	"Deps": [
+		{
+			"ImportPath": "github.com/go-mangos/mangos",
+			"Comment": "v1.2.0-27-g2e75342",
+			"Rev": "2e75342da0929bc0d8a7eabdd8c12102dcedb070"
+		},
+		{
+			"ImportPath": "github.com/go-mangos/mangos/protocol/pub",
+			"Comment": "v1.2.0-27-g2e75342",
+			"Rev": "2e75342da0929bc0d8a7eabdd8c12102dcedb070"
+		},
+		{
+			"ImportPath": "github.com/go-mangos/mangos/protocol/sub",
+			"Comment": "v1.2.0-27-g2e75342",
+			"Rev": "2e75342da0929bc0d8a7eabdd8c12102dcedb070"
+		},
+		{
+			"ImportPath": "github.com/go-mangos/mangos/transport/ipc",
+			"Comment": "v1.2.0-27-g2e75342",
+			"Rev": "2e75342da0929bc0d8a7eabdd8c12102dcedb070"
+		},
+		{
+			"ImportPath": "github.com/go-mangos/mangos/transport/tcp",
+			"Comment": "v1.2.0-27-g2e75342",
+			"Rev": "2e75342da0929bc0d8a7eabdd8c12102dcedb070"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.3.0",
+			"Rev": "392c28fe23e1c45ddba891b0320b3b5df220beea"
+		},
+		{
+			"ImportPath": "github.com/urfave/negroni",
+			"Comment": "v0.2.0-100-g61dbefc",
+			"Rev": "61dbefc515b4dede6eb2de7df1e54d49edce892d"
+		},
+		{
+			"ImportPath": "github.com/ventu-io/go-shortid",
+			"Comment": "v1.0-5-gf3377b9",
+			"Rev": "f3377b9160ef91541d29453587d9430f138a0e76"
+		}
+	]
+}
