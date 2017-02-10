@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/thekb/thanos",
+	"ImportPath": "github.com/thekb/zyzz",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
 	"Deps": [
@@ -24,11 +24,6 @@
 			"Rev": "2e75342da0929bc0d8a7eabdd8c12102dcedb070"
 		},
 		{
-			"ImportPath": "github.com/go-mangos/mangos/transport/tcp",
-			"Comment": "v1.2.0-27-g2e75342",
-			"Rev": "2e75342da0929bc0d8a7eabdd8c12102dcedb070"
-		},
-		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Comment": "v1.3.0",
 			"Rev": "392c28fe23e1c45ddba891b0320b3b5df220beea"
@@ -42,6 +37,10 @@
 			"ImportPath": "github.com/ventu-io/go-shortid",
 			"Comment": "v1.0-5-gf3377b9",
 			"Rev": "f3377b9160ef91541d29453587d9430f138a0e76"
+		},
+		{
+			"ImportPath": "github.com/winlinvip/go-fdkaac/fdkaac",
+			"Rev": "3f3f9fbdb607342cd54c9c6d8368ffcec9fb11bc"
 		}
 	]
 }

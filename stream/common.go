@@ -7,7 +7,7 @@ import (
 	"github.com/go-mangos/mangos/protocol/pub"
 	"github.com/go-mangos/mangos/protocol/sub"
 	"io"
-	"time"
+	//"time"
 	"errors"
 	"net/http"
 	"github.com/go-mangos/mangos/transport/ipc"
@@ -80,14 +80,22 @@ func PublishStream(id string, reader io.Reader) error {
 		}
 
 		for {
-			fragment := make([]byte, 1024)
+			fragment := make([]byte, 4096)
 			_, err = reader.Read(fragment)
 			if err == io.EOF {
 				break
 			}
-			sock.Send(fragment)
+			//fmt.Printf("input %+v", fragment)
+			var aacFragment []byte
+			aacFragment, err = EncodePCMToAAC(fragment)
+			if err != nil {
+				fmt.Printf("unable to encode pcm to aac %+v", err)
+			}
+			//fmt.Printf("output %+v", aacFragment)
+			sock.Send(aacFragment)
+			//sock.Send(fragment)
 			// sleep for 10 milliseconds before reading the next fragment
-			time.Sleep(10 *time.Millisecond)
+			//time.Sleep(1 *time.Millisecond)
 		}
 		return nil
 
@@ -122,7 +130,7 @@ func SubscribeStream(id string, w http.ResponseWriter) error {
 			w.Write(fragment)
 			flusher.Flush()
 			// sleep for 10 milliseconds
-			time.Sleep(10 * time.Millisecond)
+			//time.Sleep(1 * time.Millisecond)
 		}
 		return nil
 
@@ -135,3 +143,4 @@ func SubscribeStream(id string, w http.ResponseWriter) error {
 func DeleteStream(id string) error {
 	return nil
 }
+
