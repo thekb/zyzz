@@ -11,7 +11,7 @@ FORMAT = pyaudio.paInt16
 # 44.1k sampling rate ?
 RATE = 44100
 # number of channels
-CHANNELS = 2
+CHANNELS = 1
 
 STREAM = p.open(
     format=FORMAT,

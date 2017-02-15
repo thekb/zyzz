@@ -3,3 +3,78 @@ convert input to 64k mono aac output
 
 should recompile ffmpeg with libfdk_aac to support streaming
 
+api server + multiple streaming servers
+
+api server functions :
+
+1. maintain list of available streams + metadata 
+(number of concurrent users, when started etc...)
+2. least connection load balancing between streaming servers
+3. create stream 
+4. 
+
+streaming publish/subscribe will always go the same server
+
+api should redirect  to appropriate streaming server
+
+zzyz.co -> s1.zzyz.co, s2.zzyz.co, ...
+
+db requirements fo
+1. list of streams
+2. stream metadata (Name, Publisher, active, when published, stream server)
+3. 
+
+```
+apis
+POST http://localhost:8000/api/user/
+
+{"name":"test user", "description":"test user"}
+
+{
+    "error": "",
+    "data": {
+        "name": "test user",
+        "description": "test user",
+        "id": "I1TInx--C",
+        "created_at": "2017-02-15T10:03:18Z",
+        "published": 0,
+        "subscribed": 0
+    }
+}
+
+GET http://localhost:8000/api/user/I1TInx--C/
+
+{
+    "error": "",
+    "data": {
+        "name": "test user",
+        "description": "test user",
+        "id": "I1TInx--C",
+        "created_at": "2017-02-15T10:03:18Z",
+        "published": 0,
+        "subscribed": 0
+    }
+}
+
+POST http://localhost:8000/api/streamserver/
+
+{"name": "stream server 1", "host_name": "s1.zyzz.co", "internal_ip":"172.31.27.248", "external_ip":"35.154.152.224"}
+
+
+{
+    "error": "",
+    "data": {
+        "id": "f-3vOxC-C",
+        "name": "stream server 1",
+        "host_name": "s1.zyzz.co",
+        "internal_ip": "172.31.27.248",
+        "external_ip": "35.154.152.224"
+    }
+}
+
+
+```
+
+
+
+
