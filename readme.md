@@ -72,6 +72,89 @@ POST http://localhost:8000/api/streamserver/
     }
 }
 
+POST http://localhost:8000/api/stream/
+
+{"name":"stream 1", "description":"stream 1"}
+
+{
+    "error": "",
+    "data": {
+        "id": "OKkH7T--C",
+        "name": "stream 1",
+        "description": "stream 1",
+        "started_at": "2017-02-15T10:17:35Z",
+        "ended_at": "2017-02-15T10:17:35Z",
+        "status": 0,
+        "endpoint": "https://s1.zyzz.co/stream/OKkH7T--C/",
+        "subscriber_count": 0,
+        "creator_id": 1,
+        "stream_server_id": 1,
+        "transport_url": "ipc:///tmp/stream_OKkH7T--C.ipc"
+    }
+}
+
+GET http://localhost:8000/api/stream/
+
+{
+    "error": "",
+    "data": [{
+        "id": "FbOoOTC--",
+        "name": "stream 1",
+        "description": "stream 1",
+        "started_at": "2017-02-15T10:15:29Z",
+        "ended_at": "2017-02-15T10:15:29Z",
+        "status": 0,
+        "endpoint": "https://s1.zyzz.co/stream/FbOoOTC--/",
+        "subscriber_count": 0,
+        "creator_id": 1,
+        "stream_server_id": 1,
+        "transport_url": "ipc:///tmp/stream_FbOoOTC--.ipc"
+    }, {
+        "id": "DgTK7TC--",
+        "name": "stream 1",
+        "description": "stream 1",
+        "started_at": "2017-02-15T10:16:58Z",
+        "ended_at": "2017-02-15T10:16:58Z",
+        "status": 0,
+        "endpoint": "https://s1.zyzz.co/stream/DgTK7TC--/",
+        "subscriber_count": 0,
+        "creator_id": 1,
+        "stream_server_id": 1,
+        "transport_url": "ipc:///tmp/stream_DgTK7TC--.ipc"
+    }, {
+        "id": "OKkH7T--C",
+        "name": "stream 1",
+        "description": "stream 1",
+        "started_at": "2017-02-15T10:17:35Z",
+        "ended_at": "2017-02-15T10:17:35Z",
+        "status": 0,
+        "endpoint": "https://s1.zyzz.co/stream/OKkH7T--C/",
+        "subscriber_count": 0,
+        "creator_id": 1,
+        "stream_server_id": 1,
+        "transport_url": "ipc:///tmp/stream_OKkH7T--C.ipc"
+    }]
+}
+
+GET http://localhost:8000/api/stream/FbOoOTC--/
+
+{
+    "error": "",
+    "data": {
+        "id": "FbOoOTC--",
+        "name": "stream 1",
+        "description": "stream 1",
+        "started_at": "2017-02-15T10:15:29Z",
+        "ended_at": "2017-02-15T10:15:29Z",
+        "status": 0,
+        "endpoint": "https://s1.zyzz.co/stream/FbOoOTC--/",
+        "subscriber_count": 0,
+        "creator_id": 1,
+        "stream_server_id": 1,
+        "transport_url": "ipc:///tmp/stream_FbOoOTC--.ipc"
+    }
+}
+
 
 ```
 

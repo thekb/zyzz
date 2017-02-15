@@ -41,7 +41,7 @@ const (
 	GET_STREAM_ID = `SELECT A.* FROM stream A
 				WHERE A.id=$1;`
 
-	GET_STREAMS = `SELECT A.* FROM stream
+	GET_STREAMS = `SELECT A.* FROM stream A
 				ORDER By A.id ASC;`
 
 	UPDATE_STREAM_STATUS = `UPDATE stream A SET A.status=$1
