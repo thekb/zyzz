@@ -46,6 +46,7 @@ func main() {
 	n.UseHandler(r)
 	fmt.Println("starting zyzz...")
 	if *tlsFlag {
+		fmt.Println("using tls...")
 		http.ListenAndServeTLS(":443", CERT_PATH, KEY_PATH, n)
 	} else {
 		http.ListenAndServe(":8000", n)
