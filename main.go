@@ -50,8 +50,10 @@ func main() {
 	if *tlsFlag {
 		fmt.Println("using tls...")
 		cer, err := tls.LoadX509KeyPair(CERT_PATH, KEY_PATH)
-		fmt.Println("unable to load keypair:", err)
-		return
+		if err != nil {
+			fmt.Println("unable to load keypair:", err)
+			return
+		}
 		config := &tls.Config{Certificates: []tls.Certificate{cer}}
 		listener, err := tls.Listen("tcp", "0.0.0.0:443", config)
 		http.Serve(listener, n)
