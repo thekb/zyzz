@@ -10,7 +10,7 @@ import (
 
 const (
 	DRIVER_NAME = "sqlite3"
-	DB_NAME = "zyzz.sqlite"
+	DB_NAME = "/opt/zyzz/db/zyzz.sqlite"
 )
 
 var sqlxDB *sqlx.DB

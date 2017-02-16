@@ -55,7 +55,7 @@ func main() {
 			return
 		}
 		config := &tls.Config{Certificates: []tls.Certificate{cer}}
-		listener, err := tls.Listen("tcp", "0.0.0.0:443", config)
+		listener, err := tls.Listen("tcp4", "0.0.0.0:443", config)
 		http.Serve(listener, n)
 
 	} else {
