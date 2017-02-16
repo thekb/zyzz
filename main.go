@@ -16,9 +16,10 @@ const (
 	KEY_PATH = "/etc/letsencrypt/live/zyzz.co/privkey.pem"
 )
 
-func main() {
+var tlsFlag = flag.Bool("tls", false, "enable tls")
 
-	tlsFlag := flag.Bool("tls", false, "enable tls")
+func main() {
+	flag.Parse()
 
 	d, err := db.GetDB()
 	if err != nil {
