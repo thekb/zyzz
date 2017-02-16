@@ -9,6 +9,7 @@ import (
 	"github.com/thekb/zyzz/db"
 	"github.com/thekb/zyzz/stream"
 	"flag"
+	"crypto/tls"
 )
 
 const (
@@ -48,7 +49,13 @@ func main() {
 	fmt.Println("starting zyzz...")
 	if *tlsFlag {
 		fmt.Println("using tls...")
-		http.ListenAndServeTLS("0.0.0.0:443", CERT_PATH, KEY_PATH, n)
+		cer, err := tls.LoadX509KeyPair(CERT_PATH, KEY_PATH)
+		fmt.Println("unable to load keypair:", err)
+		return
+		config := &tls.Config{Certificates: []tls.Certificate{cer}}
+		listener, err := tls.Listen("tcp", "0.0.0.0:443", config)
+		http.Serve(listener, n)
+
 	} else {
 		http.ListenAndServe(":8000", n)
 
