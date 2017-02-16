@@ -16,8 +16,10 @@ import (
 )
 
 const (
-	CONTENT_TYPE_AUDIO_WAV = "audio/x-wav;codec=pcm;rate=44100"
+	CONTENT_TYPE_AUDIO_WAV = "audio/x-wav;codec=pcm"
 	CONTENT_TYPE_AAC = "audio/aac"
+	HEADER_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options"
+	OPTION_NO_SNIFF = "nosniff"
 )
 
 
@@ -33,12 +35,16 @@ func (ps PublishStream) ServeHTTP(rw http.ResponseWriter, r *http.Request){
 		ps.SendErrorJSON(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
+	if stream.Status != models.STATUS_CREATED {
+		ps.SendErrorJSON(rw, "Publish in progress", http.StatusBadRequest)
+		return
+	}
 
 	contentType := r.Header.Get(api.HEADER_CONTENT_TYPE)
-	// if input stream is wav setup encoder
-	err = ps.publish(stream, r.Body, contentType)
-
-	ps.SendErrorJSON(rw, err.Error(), http.StatusGone)
+	models.SetStreamStatus(ps.DB, shortId, models.STATUS_STREAMING)
+	ps.publish(stream, r.Body, contentType)
+	// when the publish loop exits, set set stream status
+	models.SetStreamStatus(ps.DB, shortId, models.STATUS_STOPPED)
 }
 
 func (ps *PublishStream) publish(stream models.Stream, r io.Reader, contentType string) error {
@@ -57,7 +63,7 @@ func (ps *PublishStream) publish(stream models.Stream, r io.Reader, contentType 
 		encoder = GetNewEncoder()
 	}
 	for {
-		fragment := make([]byte, 4096)
+		fragment := make([]byte, CHUNK * 2)
 
 		_, err = r.Read(fragment)
 		if err == io.EOF {
@@ -94,12 +100,15 @@ func (ss SubscribeStream) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		ss.SendErrorJSON(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
-	rw.Header().Set("Content-Type", "audio/aac")
-	rw.Header().Set("X-Content-Type-Options", "nosniff")
-	err = ss.subscribe(stream, rw)
-
-	ss.SendErrorJSON(rw, err.Error(), http.StatusGone)
-
+	if stream.Status != models.STATUS_STREAMING {
+		ss.SendErrorJSON(rw, "No Active Stream", http.StatusBadRequest)
+		return
+	}
+	models.IncrementStreamSubscriberCount(ss.DB, shortId)
+	rw.Header().Set(api.HEADER_CONTENT_TYPE, CONTENT_TYPE_AAC)
+	rw.Header().Set(HEADER_CONTENT_TYPE_OPTIONS, OPTION_NO_SNIFF)
+	ss.subscribe(stream, rw)
+	return
 }
 
 func (ss *SubscribeStream) subscribe(stream models.Stream, w http.ResponseWriter) error {

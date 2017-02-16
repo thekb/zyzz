@@ -43,7 +43,6 @@ func RunMigrations() error {
 	}
 
 	db, err := sql.Open(DRIVER_NAME, DB_NAME)
-	defer db.Close()
 	if err != nil {
 		fmt.Println("unable to open database:", err)
 		return err

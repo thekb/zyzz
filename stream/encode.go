@@ -5,6 +5,7 @@ import (
 )
 
 const (
+	CHUNK = 1024
 	CHANNELS = 1
 	SAMPLE_RATE = 44100
 	BITS_PER_SAMPLE = 16

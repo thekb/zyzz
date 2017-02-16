@@ -28,11 +28,11 @@ const (
 
 	CREATE_STREAM = `INSERT INTO stream (
 				short_id, name, description,
-				endpoint, transport_url,
+				publish_url, subscribe_url, transport_url,
 	 			stream_server_id, creator_id)
 				VALUES (
 				:short_id, :name, :description,
-				:endpoint, :transport_url,
+				:publish_url, :subscribe_url, :transport_url,
 				:stream_server_id, :creator_id);`
 
 	GET_STREAM_SHORT_ID = `SELECT A.* FROM stream A
@@ -44,18 +44,16 @@ const (
 	GET_STREAMS = `SELECT A.* FROM stream A
 				ORDER By A.id ASC;`
 
-	UPDATE_STREAM_STATUS = `UPDATE stream A SET A.status=$1
-				WHERE A.short_id=$2;`
+	UPDATE_STREAM_STATUS = `UPDATE stream SET status=$1
+				WHERE short_id=$2;`
 
-	INCREMENT_STREAM_SUBSCRIBER_COUNT = `UPDATE stream A
-				SET A.subscriber_count = A.subscriber_count + 1
-				WHERE A.short_id = $1;`
+	INCREMENT_STREAM_SUBSCRIBER_COUNT = `UPDATE stream
+				SET subscriber_count = subscriber_count + 1
+				WHERE short_id = $1;`
 
 	STOP_STREAM = `UPDATE stream A
 				SET A.status=$1, A.ended_at=CURRENT_TIMESTAMP
 				WHERE A.short_id=$2;`
-
-
 )
 
 type Stream struct {
@@ -66,16 +64,17 @@ type Stream struct {
 	StartedAt       time.Time `db:"started_at" json:"started_at"`
 	EndedAt         time.Time `db:"ended_at" json:"ended_at"`
 	Status          int `db:"status" json:"status"`
-	EndPoint        string `db:"endpoint" json:"endpoint"`
+	PublishUrl      string `db:"publish_url" json:"publish_url"`
+	SubscribeUrl    string `db:"subscribe_url" json:"subscribe_url"`
 	SubscriberCount int `db:"subscriber_count" json:"subscriber_count"`
-	CreatorId int `db:"creator_id" json:"creator_id"`
+	CreatorId       int `db:"creator_id" json:"creator_id"`
 	StreamServerId  int `db:"stream_server_id" json:"stream_server_id"`
 	TransportUrl    string `db:"transport_url" json:"transport_url"`
 }
 
 type StreamServer struct {
 	Id         int `db:"id" json:"-"`
-	ShortId string `db:"short_id" json:"id"`
+	ShortId    string `db:"short_id" json:"id"`
 	Name       string `db:"name" json:"name"`
 	HostName   string `db:"hostname" json:"host_name"`
 	InternalIP string `db:"internal_ip" json:"internal_ip"`
@@ -89,8 +88,6 @@ func CreateStreamServer(d *sqlx.DB, streamServer *StreamServer) (int64, error) {
 	}
 	return id, err
 }
-
-
 
 func GetStreamServerForShortId(d *sqlx.DB, short_id string) (StreamServer, error) {
 	var streamServer StreamServer

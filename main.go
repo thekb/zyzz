@@ -8,9 +8,17 @@ import (
 	"fmt"
 	"github.com/thekb/zyzz/db"
 	"github.com/thekb/zyzz/stream"
+	"flag"
+)
+
+const (
+	CERT_PATH = "/etc/letsencrypt/live/zyzz.co/fullchain.pem"
+	KEY_PATH = "/etc/letsencrypt/live/zyzz.co/privkey.pem"
 )
 
 func main() {
+
+	tlsFlag := flag.Bool("tls", false, "enable tls")
 
 	d, err := db.GetDB()
 	if err != nil {
@@ -37,5 +45,10 @@ func main() {
 	n := negroni.Classic()
 	n.UseHandler(r)
 	fmt.Println("starting zyzz...")
-	http.ListenAndServe(":8000", n)
+	if *tlsFlag {
+		http.ListenAndServeTLS(":443", CERT_PATH, KEY_PATH, n)
+	} else {
+		http.ListenAndServe(":8000", n)
+
+	}
 }
