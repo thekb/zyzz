@@ -31,7 +31,7 @@ def get_chunks(stream):
 
         yield chunk
 
-url = "https://s1.zyzz.co/stream/publish/JaB8Wt---/"
+url = "https://s1.zyzz.co/stream/publish/BsvFBt-CC/"
 
 s = requests.session()
 s.headers.update({'Content-Type': "audio/x-wav;codec=pcm"})

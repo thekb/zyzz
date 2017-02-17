@@ -66,7 +66,7 @@ func (ps *PublishStream) publish(stream models.Stream, r io.Reader, contentType 
 		fragment := make([]byte, CHUNK * 2)
 
 		_, err = r.Read(fragment)
-		if err == io.EOF {
+		if err != nil {
 			break
 		}
 
