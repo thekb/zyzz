@@ -25,13 +25,13 @@ print "initialized stream"
 
 def get_chunks(stream):
     while True:
-        #time.sleep(0.1)
-        chunk = stream.read(CHUNK)
-        #print len(chunk)
+        try:
+            chunk = stream.read(CHUNK)
+            yield chunk
+        except IOError as ioe:
+            print "error %s" % ioe
 
-        yield chunk
-
-url = "https://s1.zyzz.co/stream/publish/BsvFBt-CC/"
+url = "https://s1.zyzz.co/stream/publish/WGT1aN-CC/"
 
 s = requests.session()
 s.headers.update({'Content-Type': "audio/x-wav;codec=pcm"})
