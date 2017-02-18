@@ -12,7 +12,7 @@ FORMAT = pyaudio.paInt16
 RATE = 44100
 # number of channels
 CHANNELS = 1
-
+print p.get_device_info_by_index(0)['defaultSampleRate']
 STREAM = p.open(
     format=FORMAT,
     channels=CHANNELS,
@@ -26,7 +26,7 @@ print "initialized stream"
 def get_chunks(stream):
     while True:
         try:
-            chunk = stream.read(CHUNK)
+            chunk = stream.read(CHUNK, exception_on_overflow=False)
             yield chunk
         except IOError as ioe:
             print "error %s" % ioe
