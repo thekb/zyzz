@@ -22,7 +22,11 @@ const (
 	OPTION_NO_SNIFF = "nosniff"
 )
 
-var upgrader = websocket.Upgrader{} // use default options
+var upgrader = websocket.Upgrader{CheckOrigin:CheckOrigin} // use default options
+
+func CheckOrigin(r *http.Request) bool {
+	return true
+}
 
 type PublishStream struct {
 	api.Common

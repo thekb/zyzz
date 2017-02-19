@@ -94,9 +94,13 @@ func main() {
 	// write header
 	packet.BOS = true
 	packet.Packet = opusHeader.GetBytes()
+	fmt.Println(string(opusHeader.GetBytes()))
 	packet.GranulePos = granulePosition
+
 	streamState.PacketIn(&packet)
-	streamState.Flush(&page)
+	streamState.PageOut(&page)
+	//streamState.Flush(&page)
+	fmt.Println(string(page.Header))
 	f.Write(page.Header)
 	f.Write(page.Body)
 
@@ -113,7 +117,7 @@ func main() {
 	granulePosition = int64(GRANULE_SAMPLES)
 	var n int
 
-	for k := 0; k < 10;{
+	for k := 0; k < 0;{
 		err = stream.Read()
 		if err != nil {
 			fmt.Println("error reading stream:", err)
