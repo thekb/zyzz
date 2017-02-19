@@ -9,9 +9,10 @@ import (
 	"os"
 	//"encoding/binary"
 	//"golang.org/x/crypto/openpgp/packet"
-	"github.com/grd/ogg"
 	"encoding/binary"
+	"github.com/mccoyst/ogg"
 	"github.com/thekb/zyzz/encode"
+	"golang.org/x/crypto/openpgp/packet"
 )
 
 const (
@@ -58,62 +59,27 @@ func main() {
 
 	output := make([]byte, 1024)
 	// init encoder
-	var encoder opus.Encoder
-	encoder.Init(SAMPLE_RATE, CHANNELS, opus.AppAudio)
-	encoder.SetBitrateToAuto()
-	//create ogg streamsate
-	var streamState ogg.StreamState
-	streamState.Init(rand.Int31())
-	// create ogg packet
-	var packet ogg.Packet
-	// create ogg page
-	var page ogg.Page
+	var opusEncoder opus.Encoder
+	opusEncoder.Init(SAMPLE_RATE, CHANNELS, opus.AppAudio)
+	opusEncoder.SetBitrateToAuto()
 
-	header := encode.OpusHeader{
-		Version: 1,
-		Channels: 1,
-		PreSkip: 0,
-		InputSampleRate: SAMPLE_RATE,
-		Gain: 1,
-		ChannelMapping: 1,
+	oggEncoder := ogg.NewEncoder(rand.Int31(), f)
+	oggEncoder.EncodeEOS()
+	// add header
 
-	}
-	packet.Packet = header.GetBytes()
-	packet.BOS = true
-	streamState.PacketIn(&packet)
-	streamState.Flush(&page)
-	binary.Write(f, binary.LittleEndian, page.Header)
-	binary.Write(f, binary.LittleEndian, page.Body)
+
 	var n int
-	var currentPageSize int
 	for k := 0; k < 1000; k++{
 		err = stream.Read()
 		if err != nil {
 			fmt.Println("error reading stream:", err)
 			break
 		}
-		n, err = encoder.Encode(input, output)
+		n, err = opusEncoder.Encode(input, output)
 		if err != nil {
 			fmt.Println("unable to encode:", err)
 			break
 		}
-		currentPageSize += n
-		packet.Packet = output[:n]
-		packet.PacketNo += 1
-		streamState.PacketIn(&packet)
-		// if page contains more than 4k page out
-		if currentPageSize > 1024 {
-			streamState.PageOut(&page)
-			currentPageSize = 0
-			binary.Write(f, binary.BigEndian, page.Header)
-			binary.Write(f, binary.BigEndian, page.Body)
-		}
-
 
 	}
-	packet.EOS = true
-	streamState.PacketIn(&packet)
-	streamState.Flush(&page)
-	binary.Write(f, binary.BigEndian, page.Header)
-	binary.Write(f, binary.BigEndian, page.Body)
 }

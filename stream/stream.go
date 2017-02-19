@@ -11,8 +11,8 @@ import (
 	"github.com/go-mangos/mangos/protocol/pub"
 	"github.com/go-mangos/mangos/protocol/sub"
 	"github.com/go-mangos/mangos/transport/ipc"
-	"io"
 	"errors"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -22,6 +22,7 @@ const (
 	OPTION_NO_SNIFF = "nosniff"
 )
 
+var upgrader = websocket.Upgrader{} // use default options
 
 type PublishStream struct {
 	api.Common
@@ -39,17 +40,25 @@ func (ps PublishStream) ServeHTTP(rw http.ResponseWriter, r *http.Request){
 		ps.SendErrorJSON(rw, "Publish in progress", http.StatusBadRequest)
 		return
 	}
+	var conn *websocket.Conn
+	conn, err = upgrader.Upgrade(rw, r, nil)
+	if err != nil {
+		fmt.Println("unable to upgrade to websocket:", err)
+		return
+	}
+
 
 	contentType := r.Header.Get(api.HEADER_CONTENT_TYPE)
 	models.SetStreamStatus(ps.DB, shortId, models.STATUS_STREAMING)
-	ps.publish(stream, r.Body, contentType)
+	ps.publish(stream, conn, contentType)
 	// when the publish loop exits, set set stream status
 	models.SetStreamStatus(ps.DB, shortId, models.STATUS_STOPPED)
 }
 
-func (ps *PublishStream) publish(stream models.Stream, r io.Reader, contentType string) error {
+func (ps *PublishStream) publish(stream models.Stream, conn *websocket.Conn, contentType string) error {
 	var sock mangos.Socket
 	var err error
+	var fragment []byte
 	if sock, err = pub.NewSocket(); err != nil {
 		return err
 	}
@@ -63,9 +72,7 @@ func (ps *PublishStream) publish(stream models.Stream, r io.Reader, contentType 
 		encoder = GetNewEncoder()
 	}
 	for {
-		fragment := make([]byte, CHUNK * 2)
-
-		_, err = r.Read(fragment)
+		_, fragment, err = conn.ReadMessage()
 		if err != nil {
 			break
 		}
@@ -82,6 +89,7 @@ func (ps *PublishStream) publish(stream models.Stream, r io.Reader, contentType 
 			sock.Send(fragment)
 		}
 	}
+	conn.Close()
 	return errors.New("Stream Closed")
 }
 
