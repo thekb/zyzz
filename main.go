@@ -41,7 +41,7 @@ func main() {
 
 	// register stream methods
 	streamRouter := r.PathPrefix("/stream").Subrouter()
-	streamRouter.Handle("/publish/{shortId}/", stream.PublishStream{api.Common{DB:d}}).Methods("POST")
+	streamRouter.Handle("/publish/{shortId}/", stream.PublishStream{api.Common{DB:d}})
 	streamRouter.Handle("/subscribe/{shortId}/", stream.SubscribeStream{api.Common{DB:d}}).Methods("GET")
 
 	n := negroni.Classic()
