@@ -45,6 +45,7 @@ func (ps PublishStream) ServeHTTP(rw http.ResponseWriter, r *http.Request){
 		return
 	}
 	var conn *websocket.Conn
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	conn, err = upgrader.Upgrade(rw, r, nil)
 	if err != nil {
 		fmt.Println("unable to upgrade to websocket:", err)
@@ -52,14 +53,13 @@ func (ps PublishStream) ServeHTTP(rw http.ResponseWriter, r *http.Request){
 	}
 
 
-	contentType := r.Header.Get(api.HEADER_CONTENT_TYPE)
 	models.SetStreamStatus(ps.DB, shortId, models.STATUS_STREAMING)
-	ps.publish(stream, conn, contentType)
+	ps.publish(stream, conn)
 	// when the publish loop exits, set set stream status
 	models.SetStreamStatus(ps.DB, shortId, models.STATUS_STOPPED)
 }
 
-func (ps *PublishStream) publish(stream models.Stream, conn *websocket.Conn, contentType string) error {
+func (ps *PublishStream) publish(stream models.Stream, conn *websocket.Conn) error {
 	var sock mangos.Socket
 	var err error
 	var fragment []byte
@@ -72,26 +72,22 @@ func (ps *PublishStream) publish(stream models.Stream, conn *websocket.Conn, con
 		return err
 	}
 	var encoder *fdkaac.AacEncoder
-	if contentType == CONTENT_TYPE_AUDIO_WAV {
-		encoder = GetNewEncoder()
-	}
+	encoder = GetNewEncoder()
 	for {
 		_, fragment, err = conn.ReadMessage()
+		fmt.Println(fragment)
 		if err != nil {
 			break
 		}
 
 		// if encoder is present encode and publish
-		if encoder != nil {
-			var aacFragment []byte
-			aacFragment, err = encoder.Encode(fragment)
-			if err != nil {
-				fmt.Println("unable to encode pcm to aac:", err)
-			}
-			sock.Send(aacFragment)
-		} else {
-			sock.Send(fragment)
+		var aacFragment []byte
+		aacFragment, err = encoder.Encode(fragment)
+		if err != nil {
+			fmt.Println("unable to encode pcm to aac:", err)
 		}
+		sock.Send(aacFragment)
+
 	}
 	conn.Close()
 	return errors.New("Stream Closed")

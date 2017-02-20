@@ -13,7 +13,7 @@ import (
 
 const (
 	SAMPLE_RATE = 16000
-	FRAME_SIZE = 10 //opus legal frame size 2.5, 5, 10, 50 ms
+	FRAME_SIZE = 20 //opus legal frame size 2.5, 5, 10, 20 ms
 	FRAMES_PER_BUFFER = (SAMPLE_RATE * FRAME_SIZE)/1000
 	GRANULE_SAMPLES = (48000 * FRAME_SIZE)/1000
 	CHANNELS = 1
@@ -34,7 +34,6 @@ func main() {
 	defer portaudio.Terminate()
 
 	// 16 bit per sample
-	fmt.Println(FRAMES_PER_BUFFER)
 	input := make([]int16, FRAMES_PER_BUFFER)
 	stream, err := portaudio.OpenDefaultStream(CHANNELS, 0, SAMPLE_RATE, FRAMES_PER_BUFFER, input)
 	if err != nil {
@@ -60,7 +59,8 @@ func main() {
 	// init encoder
 	var opusEncoder opus.Encoder
 	opusEncoder.Init(SAMPLE_RATE, CHANNELS, opus.AppAudio)
-	opusEncoder.SetBitrateToAuto()
+	//opusEncoder.SetBitrate(32)
+	//opusEncoder.SetBitrateToAuto()
 	/*
 	oggEncoder := ogg.NewEncoder(rand.Uint32(), f)
 	*/
@@ -69,8 +69,8 @@ func main() {
 	opusHeader := encode.OpusHeader{
 		Version: 1,
 		Channels: 1,
-		PreSkip: 3840,
-		InputSampleRate: 16000,
+		PreSkip: 0,
+		InputSampleRate: SAMPLE_RATE,
 		OutPutGain: 0,
 		ChannelMap: 0,
 	}
@@ -78,8 +78,8 @@ func main() {
 	opusCommentHeader := encode.OpusCommentHeader{
 		VendorString: "thekbencoder",
 		CommentList: []string{
-			"NAME:stream",
-			"ALBUM:album",
+			"NAME=stream",
+			"ALBUM=album",
 		},
 	}
 	/*
@@ -94,13 +94,13 @@ func main() {
 	// write header
 	packet.BOS = true
 	packet.Packet = opusHeader.GetBytes()
-	fmt.Println(string(opusHeader.GetBytes()))
 	packet.GranulePos = granulePosition
-
+	packet.PacketNo = 0
+	fmt.Println(len(opusHeader.GetBytes()))
+	fmt.Println(opusHeader.GetBytes())
 	streamState.PacketIn(&packet)
-	streamState.PageOut(&page)
-	//streamState.Flush(&page)
-	fmt.Println(string(page.Header))
+	//streamState.PageOut(&page)
+	streamState.Flush(&page)
 	f.Write(page.Header)
 	f.Write(page.Body)
 
@@ -108,46 +108,53 @@ func main() {
 	packet.BOS = false
 	packet.Packet = opusCommentHeader.GetBytes()
 	packet.GranulePos = granulePosition
+	packet.PacketNo = 1
 	streamState.PacketIn(&packet)
 	streamState.Flush(&page)
 	f.Write(page.Header)
 	f.Write(page.Body)
 	// write header complete
 
-	granulePosition = int64(GRANULE_SAMPLES)
 	var n int
-
-	for k := 0; k < 0;{
+	granulePosition = GRANULE_SAMPLES
+	for k := 0; k < 10;{
 		err = stream.Read()
 		if err != nil {
 			fmt.Println("error reading stream:", err)
 			break
 		}
-		fmt.Println(input)
 		n, err = opusEncoder.Encode(input, output)
 		if err != nil {
 			fmt.Println("unable to encode:", err)
 			break
 		}
 
-		if n > 0 {
-			fmt.Println(n)
+		if n > 2 {
 			packet.GranulePos = granulePosition
 			packet.Packet = output[:n]
+			packet.PacketNo += 1
 			streamState.PacketIn(&packet)
-			streamState.Flush(&page)
-			f.Write(page.Header)
-			f.Write(page.Body)
 			granulePosition += GRANULE_SAMPLES
 			k++
 
+		}
+		//flush every 5 packets to file
+		if k % 5 == 0 {
+			streamState.Flush(&page)
+			if len(page.Header) >0 && len(page.Body) > 0 {
+				f.Write(page.Header)
+				f.Write(page.Body)
+
+			} else {
+				fmt.Println("header or byd empty")
+			}
 		}
 	}
 
 
 	packet.EOS = true
-	packet.Packet = []byte{}
-	packet.GranulePos = granulePosition
+	//packet.Packet = []byte{}
+	//packet.GranulePos = 0
 	streamState.PacketIn(&packet)
 	streamState.Flush(&page)
 	f.Write(page.Header)
