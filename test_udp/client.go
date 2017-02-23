@@ -9,28 +9,22 @@ import (
 )
 
 func main() {
-	serverAddress, err := net.ResolveUDPAddr("udp", "127.0.0.1:10001")
+	serverAddress, err := net.ResolveUDPAddr("udp", "35.154.152.224:10001")
 	if err != nil {
 		fmt.Println("unable to resolve server address:", err)
 		return
 	}
 
-	localAddress, err := net.ResolveUDPAddr("udp", "127.0.0.1:0")
+	conn, err := net.DialUDP("udp", nil, serverAddress)
 	if err != nil {
-		fmt.Println("unable to resolve local address:", err)
-		return
-	}
-
-	conn, err := net.DialUDP("udp", localAddress, serverAddress)
-	if err != nil {
-		fmt.Println("unable to dial udp:", err)
+		fmt.Println("unable to dial test_udp:", err)
 		return
 	}
 	defer conn.Close()
 
-	var packetNumber uint16
+	var packetNumber uint64
 	var nanoTime int64
-	for i := 0; i < 5; i++ {
+	for {
 		packetNumber += 1
 		nanoTime = time.Now().UnixNano()
 		buffer := new(bytes.Buffer)
