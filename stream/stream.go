@@ -75,9 +75,8 @@ func (ps *PublishStream) publish(stream models.Stream, conn *websocket.Conn) err
 	encoder = GetNewEncoder()
 	for {
 		_, fragment, err = conn.ReadMessage()
-		fmt.Println(fragment)
 		if err != nil {
-			break
+			fmt.Println("error reading message:", err)
 		}
 
 		// if encoder is present encode and publish
