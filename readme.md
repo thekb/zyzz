@@ -157,6 +157,20 @@ GET http://localhost:8000/api/stream/FbOoOTC--/
 
 
 ```
+required apis
+1. facebook auth
+2. create user after facebook auth
+3. maitain session after login
+4. user stream apis
+    1. current published stream for user
+    2. all streams published by user
+5. create event
+6. active streams on event
+
+required features
+1. offline record stream
+2. chat on event stream
+3. social media share
 
 
 
