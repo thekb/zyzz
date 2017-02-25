@@ -21,7 +21,7 @@ type GetCurrentUserStream struct {
 	Common
 }
 
-func (cuh *CreateUser) Serve(ctx *iris.Context) {
+func (cuh CreateUser) Serve(ctx *iris.Context) {
 	var user models.User
 	err := ctx.ReadJSON(&user)
 	if err != nil {
@@ -40,7 +40,7 @@ func (cuh *CreateUser) Serve(ctx *iris.Context) {
 	return
 }
 
-func (guh *GetUser) Serve(ctx *iris.Context) {
+func (guh GetUser) Serve(ctx *iris.Context) {
 	shortId := ctx.GetString(SHORT_ID)
 	user, err := models.GetUserForShortId(guh.DB, shortId)
 	if err != nil {
@@ -52,10 +52,10 @@ func (guh *GetUser) Serve(ctx *iris.Context) {
 }
 
 
-func (gus *GetUserStream) Serve(ctx *iris.Context) {
+func (gus GetUserStream) Serve(ctx *iris.Context) {
 
 }
 
-func (gcus *GetCurrentUserStream) Serve(ctx *iris.Context) {
+func (gcus GetCurrentUserStream) Serve(ctx *iris.Context) {
 
 }

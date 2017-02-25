@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	CREATE_USER = `INSERT INTO user (short_id, name, description)
-			VALUES (:short_id, :name, :description);`
+	CREATE_USER = `INSERT INTO user (short_id, name, description, email, nickname, avatarurl, fbid)
+			VALUES (:short_id, :name, :description, :email, :nickname, :avatarurl, :fbid);`
 	GET_USER_SHORT_ID = `SELECT A.* FROM user A
 			WHERE A.short_id=$1;`
 	GET_USER_ID = `SELECT A.* FROM user A
@@ -28,6 +28,10 @@ type User struct {
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	Published int `db:"published" json:"published"`
 	Subscribed int `db:"subscribed" json:"subscribed"`
+	Email string `db:"email" json:"email"`
+	NickName string `db:"nickname" json:"nickname"`
+	AvatarURL string `db:"avatarurl" json:"avatarurl"`
+	FBId string `db:"fbid" json:"fbid"`
 }
 
 func CreateUser(d *sqlx.DB, user *User) (int64, error) {
