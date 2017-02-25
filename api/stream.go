@@ -1,10 +1,9 @@
 package api
 
 import (
-	"net/http"
 	"github.com/thekb/zyzz/db/models"
 	"fmt"
-	"github.com/gorilla/mux"
+	"gopkg.in/kataras/iris.v6"
 )
 
 type CreateStream struct {
@@ -26,9 +25,13 @@ const (
 
 )
 
-func (cs CreateStream) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (cs *CreateStream) Serve(ctx *iris.Context) {
 	var stream models.Stream
-	cs.decodeRequestJSON(r, &stream)
+	err := ctx.ReadJSON(&stream)
+	if err != nil {
+		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
+		return
+	}
 	stream.ShortId = getNewShortId()
 	defaultStreamServer := models.GetDefaultStreamServer(cs.DB)
 	stream.CreatorId = models.GetDefaultUser(cs.DB).Id
@@ -38,31 +41,32 @@ func (cs CreateStream) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	stream.SubscribeUrl = fmt.Sprintf(SUBSCRIBE_URL_FORMAT, defaultStreamServer.HostName, stream.ShortId)
 	id, err := models.CreateStream(cs.DB, &stream)
 	if err != nil {
-		cs.SendErrorJSON(rw, err.Error(), http.StatusBadRequest)
+		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
+		return
 	}
 	stream, _ = models.GetStreamForId(cs.DB, id)
-	cs.SendJSON(rw, &stream)
+	ctx.JSON(iris.StatusOK, &stream)
 	return
 }
 
-func (gs GetStream) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	shortId := vars[SHORT_ID]
+func (gs *GetStream) Serve(ctx *iris.Context) {
+	shortId := ctx.GetString(SHORT_ID)
 
 	stream, err := models.GetStreamForShortId(gs.DB, shortId)
 	if err != nil {
-		gs.SendErrorJSON(rw, err.Error(), http.StatusBadRequest)
+		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
+		return
 	}
-	gs.SendJSON(rw, &stream)
+	ctx.JSON(iris.StatusOK, &stream)
 	return
 }
 
-func (gs GetStreams) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (gs *GetStreams) Serve(ctx *iris.Context) {
 	streams, err := models.GetStreams(gs.DB)
 	if err != nil {
-		gs.SendErrorJSON(rw, err.Error(), http.StatusBadRequest)
+		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
 		return
 	}
-	gs.SendJSON(rw, &streams)
+	ctx.JSON(iris.StatusOK, &streams)
 	return
 }

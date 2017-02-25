@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-const VENDOR_STRING  = "zyzz opus encoder 0.1"
+const VENDOR_STRING = "zyzz opus encoder 0.1"
 
 type OpusOggStream struct {
 	StreamId        int32
@@ -18,14 +18,16 @@ type OpusOggStream struct {
 	OutPutGain      int16
 	ChannelMap      uint8 //0 for mono or stereo
 	VendorString    string
-	CommentList     map[string]string
+	Comments        map[string]string
+	FrameSize       float32
 	streamState     ogg.StreamState
 	granulePosition int64
+	granuleSamples  int64
 	packet          ogg.Packet
 	page            ogg.Page
 }
 
-func (oos *OpusOggStream) Start(writer io.Writer) {
+func (oos *OpusOggStream) Start(w io.Writer) {
 	oos.streamState.Init(oos.StreamId)
 	buffer := new(bytes.Buffer)
 	// create header packet
@@ -44,10 +46,11 @@ func (oos *OpusOggStream) Start(writer io.Writer) {
 	oos.packet.Packet = buffer.Bytes()
 	oos.packet.BOS = true
 	oos.granulePosition = 0
+	oos.granuleSamples = int64(48000 * oos.FrameSize /1000)
 	oos.streamState.PacketIn(&oos.packet)
 	oos.streamState.Flush(&oos.page)
-	writer.Write(oos.page.Header)
-	writer.Write(oos.page.Body)
+	w.Write(oos.page.Header)
+	w.Write(oos.page.Body)
 	// create tags packet
 	buffer.Reset()
 	buffer.Write([]byte{'O', 'p', 'u', 's', 'T', 'a', 'g', 's'}) //magic signature
@@ -56,8 +59,8 @@ func (oos *OpusOggStream) Start(writer io.Writer) {
 	//write vendor string
 	buffer.Write([]byte(VENDOR_STRING))
 	//write comment list length
-	binary.Write(buffer, binary.LittleEndian, uint32(len(oos.CommentList)))
-	for key, value := range oos.CommentList {
+	binary.Write(buffer, binary.LittleEndian, uint32(len(oos.Comments)))
+	for key, value := range oos.Comments {
 		comment := fmt.Sprintf("%s=s", key, value)
 		binary.Write(buffer, binary.LittleEndian, uint32(len(comment)))
 		buffer.Write([]byte(comment))
@@ -67,55 +70,19 @@ func (oos *OpusOggStream) Start(writer io.Writer) {
 	oos.granulePosition = 0
 	oos.streamState.PacketIn(&oos.packet)
 	oos.streamState.Flush(&oos.page)
-	writer.Write(oos.page.Header)
-	writer.Write(oos.page.Body)
+	w.Write(oos.page.Header)
+	w.Write(oos.page.Body)
 }
 
-func (oos *OpusOggStream) WritePacket(opusPacket []byte) {
-
-}
-
-
-type OpusHeader struct {
-	Version         uint8
-	Channels        uint8
-	PreSkip         uint16
-	InputSampleRate uint32
-	OutPutGain      int16
-	ChannelMap      uint8 //0 for mono or stereo
-}
-
-// returns header bytes
-func (oh *OpusHeader) GetBytes() []byte {
-	buffer := new(bytes.Buffer)
-	buffer.Write([]byte{'O', 'p', 'u', 's', 'H', 'e', 'a', 'd'})
-	buffer.Write([]byte{oh.Version})
-	buffer.Write([]byte{oh.Channels})
-	binary.Write(buffer, binary.LittleEndian, oh.PreSkip)
-	binary.Write(buffer, binary.LittleEndian, oh.InputSampleRate)
-	binary.Write(buffer, binary.LittleEndian, oh.OutPutGain)
-	buffer.Write([]byte{oh.ChannelMap})
-	//buffer.Write([]byte{0x00})
-	return buffer.Bytes()
-}
-
-type OpusCommentHeader struct {
-	VendorString string
-	CommentList  []string
-}
-
-func (och *OpusCommentHeader) GetBytes() []byte {
-	buffer := new(bytes.Buffer)
-	buffer.Write([]byte{'O', 'p', 'u', 's', 'T', 'a', 'g', 's'})
-	// write vendor string length
-	binary.Write(buffer, binary.LittleEndian, uint32(len(och.VendorString)))
-	//write vendor string
-	buffer.Write([]byte(och.VendorString))
-	//write comment list length
-	binary.Write(buffer, binary.LittleEndian, uint32(len(och.CommentList)))
-	for _, userComment := range och.CommentList {
-		binary.Write(buffer, binary.LittleEndian, uint32(len(userComment)))
-		buffer.Write([]byte(userComment))
-	}
-	return buffer.Bytes()
+// returns false when frame is flushed to writer
+func (oos *OpusOggStream) WritePacket(opusPacket []byte, w io.Writer) bool {
+	oos.granulePosition += oos.granuleSamples
+	oos.packet.GranulePos = oos.granulePosition
+	oos.packet.Packet = opusPacket
+	oos.packet.PacketNo += 1
+	oos.streamState.PacketIn(&oos.packet)
+	oos.streamState.Flush(&oos.page)
+	w.Write(oos.page.Header)
+	w.Write(oos.page.Body)
+	return false
 }

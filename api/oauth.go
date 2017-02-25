@@ -8,7 +8,7 @@ import (
 	"github.com/thekb/zyzz/db/models"
 )
 
-type Callback struct {
+type FacebookCallback struct {
 	Common
 }
 
@@ -32,7 +32,7 @@ func Authenticate(ctx *iris.Context) {
 	}
 }
 
-func (cb Callback) Serve(ctx *iris.Context) {
+func (fb *FacebookCallback) Serve(ctx *iris.Context) {
 	user, err := gothic.CompleteUserAuth(ctx)
 	if err != nil {
 		ctx.SetStatusCode(iris.StatusUnauthorized)
@@ -46,12 +46,12 @@ func (cb Callback) Serve(ctx *iris.Context) {
 	user_model.NickName = user.NickName
 	user_model.FBId = user.UserID
 	user_model.AvatarURL = user.AvatarURL
-	id, err := models.CreateUser(cb.DB, &user_model)
+	id, err := models.CreateUser(fb.DB, &user_model)
 	if err != nil {
 		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
 		return
 	}
-	user_model, _ = models.GetUserForId(cb.DB, id)
+	user_model, _ = models.GetUserForId(fb.DB, id)
 	ctx.JSON(iris.StatusOK, Response{Data:user})
 	return
 
