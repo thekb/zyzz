@@ -76,9 +76,10 @@ func main() {
 	streamApi.Handle("GET" ,"/:id", &api.GetEvent{api.Common{DB:d}})
 	streamApi.Handle("GET" ,"/", &api.GetEvents{api.Common{DB:d}})
 
-
-	app.Handle("GET", "/stream/:id/publish", &stream.PublishStream{api.Common{DB:d}})
-	app.Handle("GET", "/stream/:id", &stream.SubscribeStream{api.Common{DB:d}})
+	streamParty := app.Party("/stream")
+	streamParty.Handle("GET", "/:id/publish", &stream.PublishStream{api.Common{DB:d}})
+	streamParty.Handle("GET", "/:id", &stream.SubscribeStream{api.Common{DB:d}})
+	streamParty.Handle("GET", "/ws/:id", &stream.WebSocketSubscriber{api.Common{DB:d}})
 
 
 	app.Listen(":8000")

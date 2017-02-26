@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"github.com/grd/ogg"
-	"io"
 	"fmt"
 )
 
@@ -27,7 +26,8 @@ type OpusOggStream struct {
 	page            ogg.Page
 }
 
-func (oos *OpusOggStream) Start(w io.Writer) {
+func (oos *OpusOggStream) Start() []byte {
+	output := new(bytes.Buffer)
 	oos.streamState.Init(oos.StreamId)
 	buffer := new(bytes.Buffer)
 	// create header packet
@@ -49,8 +49,8 @@ func (oos *OpusOggStream) Start(w io.Writer) {
 	oos.granuleSamples = int64(48000 * oos.FrameSize /1000)
 	oos.streamState.PacketIn(&oos.packet)
 	oos.streamState.Flush(&oos.page)
-	w.Write(oos.page.Header)
-	w.Write(oos.page.Body)
+	output.Write(oos.page.Header)
+	output.Write(oos.page.Body)
 	// create tags packet
 	buffer.Reset()
 	buffer.Write([]byte{'O', 'p', 'u', 's', 'T', 'a', 'g', 's'}) //magic signature
@@ -70,19 +70,20 @@ func (oos *OpusOggStream) Start(w io.Writer) {
 	oos.granulePosition = 0
 	oos.streamState.PacketIn(&oos.packet)
 	oos.streamState.Flush(&oos.page)
-	w.Write(oos.page.Header)
-	w.Write(oos.page.Body)
+	output.Write(oos.page.Header)
+	output.Write(oos.page.Body)
+	return output.Bytes()
 }
 
-// returns false when frame is flushed to writer
-func (oos *OpusOggStream) WritePacket(opusPacket []byte, w io.Writer) bool {
+func (oos *OpusOggStream) FlushPacket(opusPacket []byte) []byte {
+	output := new(bytes.Buffer)
 	oos.granulePosition += oos.granuleSamples
 	oos.packet.GranulePos = oos.granulePosition
 	oos.packet.Packet = opusPacket
 	oos.packet.PacketNo += 1
 	oos.streamState.PacketIn(&oos.packet)
 	oos.streamState.Flush(&oos.page)
-	w.Write(oos.page.Header)
-	w.Write(oos.page.Body)
-	return false
+	output.Write(oos.page.Header)
+	output.Write(oos.page.Body)
+	return output.Bytes()
 }

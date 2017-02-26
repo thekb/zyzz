@@ -154,7 +154,7 @@ func (ss *SubscribeStream) Serve(ctx *iris.Context){
 	}
 	// write ogg/opus headers to stream
 	ctx.StreamWriter(func (w io.Writer) bool{
-		opusOggStream.Start(w)
+		w.Write(opusOggStream.Start())
 		return false
 	})
 	var sock mangos.Socket
@@ -179,39 +179,82 @@ func (ss *SubscribeStream) Serve(ctx *iris.Context){
 			return
 		}
 		ctx.StreamWriter(func(w io.Writer) bool {
-			return opusOggStream.WritePacket(fragment, w)
+			w.Write(opusOggStream.FlushPacket(fragment))
+			return false
 		})
 
 	}
-
-	return
 }
 
+type WebSocketSubscriber struct {
+	api.Common
+}
 
-func (ss *SubscribeStream) subscribe(stream models.Stream, w http.ResponseWriter) error {
-	var sock mangos.Socket
+func (wss *WebSocketSubscriber) Serve(ctx *iris.Context) {
+	shortId := ctx.GetString(api.SHORT_ID)
 	var err error
+	stream, err := models.GetStreamForShortId(wss.DB, shortId)
+
+	if err != nil {
+		ctx.JSON(iris.StatusBadRequest, &api.Response{Error:err.Error()})
+		return
+	}
+	if stream.Status != models.STATUS_STREAMING {
+		ctx.JSON(iris.StatusBadRequest, &api.Response{Error:"No active stream"})
+		return
+	}
+	var conn *websocket.Conn
+	conn, err = upgrader.Upgrade(ctx.ResponseWriter, ctx.Request, nil)
+	if err != nil {
+		ctx.Log(iris.ProdMode, "unable to upgrade websocket:", err)
+		return
+	}
+
+	models.IncrementStreamSubscriberCount(wss.DB, shortId)
+
+	comments := make(map[string]string)
+	comments["NAME"] = "TEST STREAM"
+	comments["ALBUM"] = "TEST ALBUM"
+	opusOggStream := encode.OpusOggStream{
+		StreamId: rand.Int31(),
+		Channels: 1,
+		PreSkip: 0,
+		InputSampleRate: 24000,
+		OutPutGain: 0,
+		ChannelMap: 0,
+		VendorString: "thekb zyzz encoder",
+		Comments: comments,
+		FrameSize: 10.0,
+	}
+	err = conn.WriteMessage(websocket.BinaryMessage, opusOggStream.Start())
+	if err != nil {
+		ctx.Log(iris.ProdMode, "unable to write stream headers, closing:", err)
+		conn.Close()
+		return
+	}
+
+	var sock mangos.Socket
 	var fragment []byte
-	flusher, _ := w.(http.Flusher)
 	if sock, err = sub.NewSocket(); err != nil {
-		return err
+		conn.WriteJSON(&api.Response{Error:err.Error()})
+		return
 	}
 	sock.AddTransport(ipc.NewTransport())
 	if err = sock.Dial(stream.TransportUrl); err != nil {
-		return err
+		conn.WriteJSON(&api.Response{Error:err.Error()})
+		return
 	}
 
 	if err = sock.SetOption(mangos.OptionSubscribe, []byte("")); err != nil {
-		return err
+		conn.WriteJSON(&api.Response{Error:err.Error()})
+		return
 	}
 	for {
 		if fragment, err = sock.Recv(); err != nil {
-			return err
+			ctx.Log(iris.ProdMode, "unabel to receive from socket:", err)
+			continue
 		}
-		w.Write(fragment)
-		flusher.Flush()
+		conn.WriteMessage(websocket.BinaryMessage, opusOggStream.FlushPacket(fragment))
 	}
-	return errors.New("Stream Closed")
-
 
 }
