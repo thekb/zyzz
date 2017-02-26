@@ -2,10 +2,11 @@ package api
 
 import (
 	"github.com/markbates/goth/providers/facebook"
+	"gopkg.in/kataras/iris.v6"
 	"github.com/iris-contrib/gothic"
 	"github.com/markbates/goth"
-	"gopkg.in/kataras/iris.v6"
 	"github.com/thekb/zyzz/db/models"
+	"fmt"
 )
 
 type FacebookCallback struct {
@@ -39,20 +40,34 @@ func (fb *FacebookCallback) Serve(ctx *iris.Context) {
 		ctx.Writef(err.Error())
 		return
 	}
-	var user_model models.User
-	user_model.ShortId = getNewShortId()
-	user_model.Email = user.Email
-	user_model.Description = user.Description
-	user_model.NickName = user.NickName
-	user_model.FBId = user.UserID
-	user_model.AvatarURL = user.AvatarURL
-	id, err := models.CreateUser(fb.DB, &user_model)
+	fmt.Println("user.UserID is ", user.UserID)
+	user_model , err := models.GetUserForFBId(fb.DB, user.UserID)
 	if err != nil {
-		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
-		return
+		fmt.Println("User not present creating now:", err)
+		var user_model models.User
+		user_model.ShortId = getNewShortId()
+		user_model.Email = user.Email
+		user_model.Description = user.Description
+		user_model.NickName = user.NickName
+		user_model.FBId = user.UserID
+		user_model.AvatarURL = user.AvatarURL
+		user_model.AccessToken = user.AccessToken
+		id, err := models.CreateUser(fb.DB, &user_model)
+		if err != nil {
+			ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+			return
+		}
+		user_model, _ = models.GetUserForId(fb.DB, id)
+		fmt.Println("Created user :", user_model)
+	}else {
+		user_model.Email = user.Email
+		user_model.Description = user.Description
+		user_model.NickName = user.NickName
+		user_model.AvatarURL = user.AvatarURL
+		user_model.AccessToken = user.AccessToken
+		models.UpdateUser(fb.DB, &user_model)
 	}
-	user_model, _ = models.GetUserForId(fb.DB, id)
+	fmt.Println("Saved user is :", user_model)
 	ctx.JSON(iris.StatusOK, Response{Data:user})
 	return
-
 }

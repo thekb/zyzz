@@ -136,3 +136,12 @@ func Update(db *sqlx.DB, query string, args ...interface{}) error {
 	}
 	return err
 }
+
+//wrapper for updating object
+func UpdateObj(db *sqlx.DB, query string, object interface{}) error {
+	_, err := db.NamedExec(query, object)
+	if err != nil {
+		fmt.Println("unable to update:", err)
+	}
+	return err
+}
