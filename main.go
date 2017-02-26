@@ -69,8 +69,7 @@ func main() {
 	// stream api
 	streamApi := app.Party("/api/stream")
 	streamApi.Handle("POST" ,"/", &api.CreateStream{api.Common{DB:d}})
-	//streamApi.Handle("GET" ,"/:id", &api.GetEvent{api.Common{DB:d}})
-	streamApi.Handle("GET" ,"/", &api.GetEvents{api.Common{DB:d}})
+	streamApi.Handle("GET" ,"/", &api.GetStreams{api.Common{DB:d}})
 
 	streamParty := app.Party("/stream")
 	streamParty.Handle("GET", "/ws/publish/:id", &stream.PublishStream{api.Common{DB:d}})

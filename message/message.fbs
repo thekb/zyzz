@@ -1,0 +1,40 @@
+namespace message;
+
+
+enum StreamAction : byte {Start = 1, Pause, Stop}
+
+table StreamControl {
+    stream_id:string;
+    user_id:string;
+    sample_rate:uint;
+    channels:ubyte;
+    frame_size:ubyte;
+    stream_action:StreamAction = Start;
+}
+
+table StreamFrame {
+    stream_id:string;
+    user_id:string;
+    frame:[byte];
+}
+
+table Comment {
+    stream_id:string;
+    user_id:string;
+    text:string;
+    timestamp:long;
+}
+
+table Metadata {
+    metadata:string;
+}
+
+union Message {StreamControl, StreamFrame, Comment, Metadata }
+
+table EventMessage {
+    event_id:string;
+    message:Message;
+}
+
+root_type EventMessage;
+

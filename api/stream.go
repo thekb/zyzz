@@ -57,7 +57,7 @@ func (gs *GetStream) Serve(ctx *iris.Context) {
 		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
 		return
 	}
-	ctx.JSON(iris.StatusOK, &stream)
+	ctx.JSON(iris.StatusOK, &Response{Data:stream})
 	return
 }
 
@@ -67,6 +67,6 @@ func (gs *GetStreams) Serve(ctx *iris.Context) {
 		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
 		return
 	}
-	ctx.JSON(iris.StatusOK, &streams)
+	ctx.JSON(iris.StatusOK, &Response{Data:streams})
 	return
 }

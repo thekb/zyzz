@@ -12,7 +12,7 @@ FORMAT = pyaudio.paInt16
 RATE = 24000
 # number of channels
 CHANNELS = 1
-FRAME_SIZE = 20  # in milliseconds
+FRAME_SIZE = 60  # in milliseconds
 # frames per buffer ?
 CHUNK = int(RATE * FRAME_SIZE/1000)
 print CHUNK
