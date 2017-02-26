@@ -56,14 +56,10 @@ func main() {
 
 	// auth api
 	authapi := app.Party("/auth")
-	authapi.HandleFunc("GET", "/:provider", api.Authenticate)
+	authapi.Get("/:provider", api.Authenticate)
+	//authapi.HandleFunc("GET", "/:provider", api.Authenticate)
 	authapi.Handle("GET", "/:provider/callback", &api.FacebookCallback{api.Common{DB:d}})
 
-	// stream server api
-	eventApi.Handle("POST" ,"/", &api.CreateEvent{api.Common{DB:d}})
-	eventApi.Handle("GET" ,"/:id", &api.GetEvent{api.Common{DB:d}})
-	eventApi.Handle("GET" ,"/", &api.GetEvents{api.Common{DB:d}})
-	eventApi.Handle("GET" ,"/streams", &api.GetEventStreams{api.Common{DB:d}})
 
 	//stream server api
 	streamServerApi := app.Party("/api/streamserver")
@@ -73,13 +69,14 @@ func main() {
 	// stream api
 	streamApi := app.Party("/api/stream")
 	streamApi.Handle("POST" ,"/", &api.CreateStream{api.Common{DB:d}})
-	streamApi.Handle("GET" ,"/:id", &api.GetEvent{api.Common{DB:d}})
+	//streamApi.Handle("GET" ,"/:id", &api.GetEvent{api.Common{DB:d}})
 	streamApi.Handle("GET" ,"/", &api.GetEvents{api.Common{DB:d}})
 
 	streamParty := app.Party("/stream")
-	streamParty.Handle("GET", "/:id/publish", &stream.PublishStream{api.Common{DB:d}})
-	streamParty.Handle("GET", "/:id", &stream.SubscribeStream{api.Common{DB:d}})
-	streamParty.Handle("GET", "/ws/:id", &stream.WebSocketSubscriber{api.Common{DB:d}})
+	streamParty.Handle("GET", "/ws/publish/:id", &stream.PublishStream{api.Common{DB:d}})
+	streamParty.Handle("GET", "/ws/subscribe/:id", &stream.WebSocketSubscriber{api.Common{DB:d}})
+	streamParty.Handle("GET", "/http/subscribe/:id", &stream.SubscribeStream{api.Common{DB:d}})
+
 
 
 	app.Listen(":8000")
