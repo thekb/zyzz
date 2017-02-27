@@ -21,7 +21,7 @@ type GetCurrentUserStream struct {
 	Common
 }
 
-func (cuh CreateUser) Serve(ctx *iris.Context) {
+func (cuh CreateUser) Serve(ctx *iris.Context)  {
 	var user models.User
 	err := ctx.ReadJSON(&user)
 	if err != nil {

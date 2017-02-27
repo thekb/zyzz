@@ -34,7 +34,8 @@ func (cs *CreateStream) Serve(ctx *iris.Context) {
 	}
 	stream.ShortId = getNewShortId()
 	defaultStreamServer := models.GetDefaultStreamServer(cs.DB)
-	stream.CreatorId = models.GetDefaultUser(cs.DB).Id
+	user_id, _ := ctx.Session().GetInt("id")
+	stream.CreatorId = user_id
 	stream.StreamServerId = defaultStreamServer.Id
 	stream.TransportUrl = fmt.Sprintf(TRANSPORT_URL_FORMAT, stream.ShortId)
 	stream.PublishUrl = fmt.Sprintf(PUBLISH_URL_FORMAT, defaultStreamServer.HostName, stream.ShortId)

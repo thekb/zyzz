@@ -15,6 +15,8 @@ create table event_stream(
     short_id text not null,
     event_id integer not null,
     stream_id integer not null
+    foreign key(event_id) references event(id),
+    foreign key(stream_id) references stream(id),
 );
 -- +migrate Down
 drop table event;

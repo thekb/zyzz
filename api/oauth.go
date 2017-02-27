@@ -27,6 +27,7 @@ func init() {
 }
 
 func Authenticate(ctx *iris.Context) {
+	fmt.Println("authenticating")
 	err := gothic.BeginAuthHandler(ctx)
 	if err != nil {
 		ctx.Log(iris.ProdMode, err.Error())
@@ -35,12 +36,12 @@ func Authenticate(ctx *iris.Context) {
 
 func (fb *FacebookCallback) Serve(ctx *iris.Context) {
 	user, err := gothic.CompleteUserAuth(ctx)
+	fmt.Println("after authentication")
 	if err != nil {
 		ctx.SetStatusCode(iris.StatusUnauthorized)
 		ctx.Writef(err.Error())
 		return
 	}
-	fmt.Println("user.UserID is ", user.UserID)
 	user_model , err := models.GetUserForFBId(fb.DB, user.UserID)
 	if err != nil {
 		fmt.Println("User not present creating now:", err)
@@ -67,7 +68,10 @@ func (fb *FacebookCallback) Serve(ctx *iris.Context) {
 		user_model.AccessToken = user.AccessToken
 		models.UpdateUser(fb.DB, &user_model)
 	}
+	ctx.Session().Set("fbid", user_model.FBId)
+	ctx.Session().Set("id", user_model.Id)
+	ctx.Session().Set("short_id", user_model.ShortId)
 	fmt.Println("Saved user is :", user_model)
-	ctx.JSON(iris.StatusOK, Response{Data:user})
+	ctx.Redirect("/api/stream/")
 	return
 }
