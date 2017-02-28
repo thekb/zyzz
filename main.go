@@ -10,6 +10,8 @@ import (
 	"gopkg.in/kataras/iris.v6"
 	"github.com/thekb/zyzz/db"
 	"fmt"
+	"github.com/thekb/zyzz/control"
+	"gopkg.in/kataras/iris.v6/middleware/logger"
 )
 
 
@@ -42,6 +44,18 @@ func main() {
 	app.Adapt(iris.DevLogger())
 	app.Adapt(httprouter.New())
 	app.Adapt(mySessions)
+
+	customLogger := logger.New(logger.Config{
+		// Status displays status code
+		Status: true,
+		// IP displays request's remote address
+		IP: true,
+		// Method displays the http method
+		Method: true,
+		// Path displays the request path
+		Path: true,
+	})
+	app.Use(customLogger)
 
 	// auth api
 	authapi := app.Party("/auth")
@@ -78,7 +92,7 @@ func main() {
 	streamParty.Handle("GET", "/ws/subscribe/:id", &stream.WebSocketSubscriber{api.Common{DB:d}})
 	streamParty.Handle("GET", "/http/subscribe/:id", &stream.SubscribeStream{api.Common{DB:d}})
 
-
+	app.Handle("GET", "/control", &control.Control{api.Common{DB:d}})
 
 	app.Listen(":8000")
 

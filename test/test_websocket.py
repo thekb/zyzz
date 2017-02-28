@@ -1,5 +1,6 @@
 from websocket import create_connection
 import pyaudio
+import message
 import time
 import struct
 import array
@@ -15,7 +16,6 @@ CHANNELS = 1
 FRAME_SIZE = 60  # in milliseconds
 # frames per buffer ?
 CHUNK = int(RATE * FRAME_SIZE/1000)
-print CHUNK
 STREAM = p.open(
     format=FORMAT,
     channels=CHANNELS,
