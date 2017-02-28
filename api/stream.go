@@ -41,6 +41,7 @@ func (cs CreateStream) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		cs.SendErrorJSON(rw, err.Error(), http.StatusBadRequest)
 	}
 	stream, _ = models.GetStreamForId(cs.DB, id)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	cs.SendJSON(rw, &stream)
 	return
 }
