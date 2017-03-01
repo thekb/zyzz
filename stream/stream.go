@@ -12,7 +12,7 @@ import (
 	"errors"
 	"github.com/gorilla/websocket"
 	"gopkg.in/kataras/iris.v6"
-	"gopkg.in/hraban/opus.v2"
+	"github.com/thekb/opus"
 	"io"
 	"github.com/thekb/zyzz/encode"
 	"math/rand"

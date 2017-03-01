@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/markbates/goth/providers/facebook"
 	"gopkg.in/kataras/iris.v6"
-	"github.com/iris-contrib/gothic"
+	"github.com/thekb/gothic"
 	"github.com/markbates/goth"
 	"github.com/thekb/zyzz/db/models"
 	"fmt"
