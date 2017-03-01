@@ -35,7 +35,7 @@ func (sc *StreamControl) InitStream(streamId, transportURL string) error {
 	sc.comment[streamId] = make(chan []byte, 10)
 	// separate comments from controls/frames
 	go sendToSocket(sc.control[streamId], sc.socket[streamId])
-	go sendToSocket(sc.comment[streamId], sc.comment[streamId])
+	go sendToSocket(sc.comment[streamId], sc.socket[streamId])
 	return nil
 }
 
