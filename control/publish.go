@@ -2,7 +2,7 @@ package control
 
 import (
 	"fmt"
-	"github.com/anacrolix/sync"
+	"sync"
 	"github.com/go-mangos/mangos"
 	"github.com/go-mangos/mangos/protocol/pub"
 	"github.com/go-mangos/mangos/transport/ipc"
