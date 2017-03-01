@@ -74,7 +74,7 @@ POST http://localhost:8000/api/streamserver/
 
 POST http://localhost:8000/api/stream/
 
-{"name":"stream 1", "description":"stream 1"}
+{"name":"stream 1", "description":"stream 1", "event_id":1}
 
 {
     "error": "",
@@ -89,7 +89,8 @@ POST http://localhost:8000/api/stream/
         "subscriber_count": 0,
         "creator_id": 1,
         "stream_server_id": 1,
-        "transport_url": "ipc:///tmp/stream_OKkH7T--C.ipc"
+        "transport_url": "ipc:///tmp/stream_OKkH7T--C.ipc",
+        "event_id": 1
     }
 }
 
