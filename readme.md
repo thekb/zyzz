@@ -155,6 +155,45 @@ GET http://localhost:8000/api/stream/FbOoOTC--/
     }
 }
 
+POST http://localhost:8000/api/event/
+
+{"name":"event 1", "description":"event 1", "RunningNow": "True"}
+
+{
+    "error": "",
+    "data": {
+        "name": "event 1",
+        "description": "event 1",
+        "id": "u1cewP1CC",
+        "created_at": "2017-03-01T18:51:12Z",
+        "starttime": "0001-01-01T00:00:00Z",
+        "endtime": "0001-01-01T00:00:00Z",
+        "running_now": false
+    }
+}
+
+GET http://localhost:8000/api/event/
+
+{
+    "error": "",
+    "data": [{
+        "name": "event 1",
+        "description": "event 1",
+        "id": "u1cewP1CC",
+        "created_at": "2017-03-01T18:51:12Z",
+        "starttime": "0001-01-01T00:00:00Z",
+        "endtime": "0001-01-01T00:00:00Z",
+        "running_now": false
+    }, {
+        "name": "event 2",
+        "description": "event 2",
+        "id": "4uoLON1--",
+        "created_at": "2017-03-01T19:00:23Z",
+        "starttime": "0001-01-01T00:00:00Z",
+        "endtime": "0001-01-01T00:00:00Z",
+        "running_now": false
+    }]
+}
 
 ```
 required apis
