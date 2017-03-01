@@ -7,17 +7,28 @@ create table event(
     created_at datetime not null default current_timestamp,
     starttime datetime,
     endtime datetime,
-    running_nown bool
+    running_now int
 );
 
-create table event_stream(
+create table stream(
     id integer primary key autoincrement,
     short_id text not null,
-    event_id integer not null,
-    stream_id integer not null,
-    foreign key (event_id) references event(id),
-    foreign key (stream_id) references stream(id)
+    name text not null,
+    description text not null,
+    started_at datetime not null default current_timestamp,
+    ended_at datetime not null default current_timestamp,
+    status int not null default 0,
+    subscriber_count int not null default 0,
+    publish_url text not null,
+    subscribe_url text not null,
+    stream_server_id int not null,
+    creator_id int not null,
+    transport_url text not null,
+    event_id int not null,
+    foreign key(creator_id) references user(id),
+    foreign key(stream_server_id) references stream_server(id),
+    foreign key(event_id) references event(id)
 );
 -- +migrate Down
 drop table event;
-drop table event_stream;
+drop table stream;

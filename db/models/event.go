@@ -14,6 +14,8 @@ const (
 			WHERE E.id=$1;`
 	GET_EVENT_SHORT_ID = `SELECT E.* FROM event E
 			WHERE E.short_id=$1;`
+	GET_EVENTS = `SELECT A.* FROM event A
+				ORDER By A.id ASC;`
 )
 
 type Event struct {
@@ -24,15 +26,9 @@ type Event struct {
 	CreatedAt   time.Time `db:"created_at" json:"created_at"`
 	StartTime   time.Time `db:"starttime" json:"starttime"`
 	EndTime     time.Time `db:"endtime" json:"endtime"`
-	running_now bool `db:"running_now" json:"running_now"`
+	RunningNow  int `db:"running_now" json:"running_now"`
 }
 
-type Event_Stream struct {
-	Id	    int `db:"id" json:"-"`
-	ShortId     string `db:"short_id" json:"id"`
-	EventId	    int `db:"event_id" json:"event_id"`
-	StreamId    int `db:"stream_id" json:"stream_id"`
-}
 
 func CreateEvent(d *sqlx.DB, event *Event) (int64, error) {
 	id, err := db.InsertStruct(d, CREATE_EVENT, event)
@@ -58,4 +54,13 @@ func GetEventForShortId(d *sqlx.DB, short_id string) (Event, error) {
 		fmt.Println("unable to fetch event:", err)
 	}
 	return event, err
+}
+
+func GetEvents(d *sqlx.DB) ([]Event, error) {
+	var events []Event
+	err := db.Select(d, GET_EVENTS, &events)
+	if err != nil {
+		fmt.Println("unable to get streams:", err)
+	}
+	return events, err
 }

@@ -52,7 +52,13 @@ func (ce *CreateEvent) Serve(ctx *iris.Context) {
 }
 
 func (ge *GetEvents) Serve(ctx *iris.Context) {
-
+	events, err := models.GetEvents(ge.DB)
+	if err != nil {
+		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		return
+	}
+	ctx.JSON(iris.StatusOK, &Response{Data:events})
+	return
 }
 
 func (ges *GetEventStreams) Serve(ctx *iris.Context) {

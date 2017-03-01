@@ -53,13 +53,11 @@ func (fb *FacebookCallback) Serve(ctx *iris.Context) {
 		user_model.FBId = user.UserID
 		user_model.AvatarURL = user.AvatarURL
 		user_model.AccessToken = user.AccessToken
-		id, err := models.CreateUser(fb.DB, &user_model)
+		_, err := models.CreateUser(fb.DB, &user_model)
 		if err != nil {
 			ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
 			return
 		}
-		user_model, _ = models.GetUserForId(fb.DB, id)
-		fmt.Println("Created user :", user_model)
 	}else {
 		user_model.Email = user.Email
 		user_model.Description = user.Description
@@ -68,6 +66,7 @@ func (fb *FacebookCallback) Serve(ctx *iris.Context) {
 		user_model.AccessToken = user.AccessToken
 		models.UpdateUser(fb.DB, &user_model)
 	}
+	user_model, _ = models.GetUserForFBId(fb.DB, user.UserID)
 	ctx.Session().Set("fbid", user_model.FBId)
 	ctx.Session().Set("id", user_model.Id)
 	ctx.Session().Set("short_id", user_model.ShortId)

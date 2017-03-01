@@ -29,11 +29,11 @@ const (
 	CREATE_STREAM = `INSERT INTO stream (
 				short_id, name, description,
 				publish_url, subscribe_url, transport_url,
-	 			stream_server_id, creator_id)
+	 			stream_server_id, creator_id, event_id)
 				VALUES (
 				:short_id, :name, :description,
 				:publish_url, :subscribe_url, :transport_url,
-				:stream_server_id, :creator_id);`
+				:stream_server_id, :creator_id, :event_id);`
 
 	GET_STREAM_SHORT_ID = `SELECT A.* FROM stream A
 				WHERE A.short_id=$1;`
@@ -70,6 +70,7 @@ type Stream struct {
 	CreatorId       int `db:"creator_id" json:"creator_id"`
 	StreamServerId  int `db:"stream_server_id" json:"stream_server_id"`
 	TransportUrl    string `db:"transport_url" json:"transport_url"`
+	EventId		int `db:"event_id" json:"event_id"`
 }
 
 type StreamServer struct {

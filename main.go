@@ -73,8 +73,8 @@ func main() {
 	// event api
 	eventApi := app.Party("/api/event", sessionMiddleware)
 	eventApi.Handle("POST", "/", &api.CreateEvent{api.Common{DB:d}})
-	//eventApi.Handle("GET", "/:id", api.GetEvent{api.Common{DB:d}})
-	//eventApi.Handle("GET", "/", api.GetEvents{api.Common{DB:d}})
+	//eventApi.Handle("GET", "/:id", &api.GetEvent{api.Common{DB:d}})
+	eventApi.Handle("GET", "/", &api.GetEvents{api.Common{DB:d}})
 	eventApi.Handle("GET", "/streams", &api.GetEventStreams{api.Common{DB:d}})
 
 	//stream server api
