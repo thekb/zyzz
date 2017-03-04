@@ -15,6 +15,7 @@ const (
 	GET_EVENT_SHORT_ID = `SELECT E.* FROM event E
 			WHERE E.short_id=$1;`
 	GET_EVENTS = `SELECT A.* FROM event A
+			WHERE A.running_now = 1
 				ORDER By A.id ASC;`
 )
 

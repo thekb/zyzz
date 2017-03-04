@@ -27,12 +27,16 @@ const (
 
 func (cs *CreateStream) Serve(ctx *iris.Context) {
 	var stream models.Stream
+	/*
 	err := ctx.ReadJSON(&stream)
 	if err != nil {
 		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
 		return
 	}
+	*/
+	event_shortId := ctx.GetString(SHORT_ID)
 	stream.ShortId = getNewShortId()
+	stream.EventId = event_shortId
 	defaultStreamServer := models.GetDefaultStreamServer(cs.DB)
 	user_id, _ := ctx.Session().GetInt("id")
 	stream.CreatorId = user_id
@@ -63,7 +67,8 @@ func (gs *GetStream) Serve(ctx *iris.Context) {
 }
 
 func (gs *GetStreams) Serve(ctx *iris.Context) {
-	streams, err := models.GetStreams(gs.DB)
+	event_shortId := ctx.GetString(SHORT_ID)
+	streams, err := models.GetStreams(gs.DB, event_shortId)
 	if err != nil {
 		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
 		return

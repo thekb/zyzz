@@ -16,8 +16,6 @@ import (
 	"io"
 	"github.com/thekb/zyzz/encode"
 	"math/rand"
-	"encoding/binary"
-	"bytes"
 )
 
 const (
@@ -79,15 +77,15 @@ func (ps *PublishStream) publish(stream models.Stream, conn *websocket.Conn) err
 	if err = sock.Listen(stream.TransportUrl); err != nil {
 		return err
 	}
-	var outputSize int
+	//var outputSize int
 	var opusEncoder opus.Encoder
 	err = opusEncoder.Init(SAMPLE_RATE, CHANNELS, opus.AppAudio)
 	if err != nil {
 		fmt.Println("unable to init ops encoder:", err)
 		return err
 	}
-	output := make([]byte, 1024)
-	encoderInput := make([]int16, 480)
+	//output := make([]byte, 1024)
+	//encoderInput := make([]int16, 480)
 	//TODO optimize with io reader
 	for {
 		_, input, err = conn.ReadMessage()
@@ -95,12 +93,13 @@ func (ps *PublishStream) publish(stream models.Stream, conn *websocket.Conn) err
 			fmt.Println("error reading message:", err)
 			break
 		}
+		/*
 		err = binary.Read(bytes.NewReader(input), binary.LittleEndian, &encoderInput)
 		if err != nil {
 			fmt.Println("error reading message:", err)
 			continue
 		}
-		outputSize, err = opusEncoder.Encode(encoderInput, output)
+		//outputSize, err = opusEncoder.Encode(encoderInput, output)
 		if err != nil {
 			fmt.Println("unable to encode pcm to opus:", err)
 			continue
@@ -109,6 +108,8 @@ func (ps *PublishStream) publish(stream models.Stream, conn *websocket.Conn) err
 		if outputSize > 2 {
 			sock.Send(output[:outputSize])
 		}
+		*/
+		sock.Send(input)
 
 
 	}
@@ -212,6 +213,7 @@ func (wss *WebSocketSubscriber) Serve(ctx *iris.Context) {
 
 	models.IncrementStreamSubscriberCount(wss.DB, shortId)
 
+	/*
 	comments := make(map[string]string)
 	comments["NAME"] = "TEST STREAM"
 	comments["ALBUM"] = "TEST ALBUM"
@@ -232,7 +234,7 @@ func (wss *WebSocketSubscriber) Serve(ctx *iris.Context) {
 		conn.Close()
 		return
 	}
-
+	*/
 	var sock mangos.Socket
 	var fragment []byte
 	if sock, err = sub.NewSocket(); err != nil {
@@ -254,7 +256,7 @@ func (wss *WebSocketSubscriber) Serve(ctx *iris.Context) {
 			ctx.Log(iris.ProdMode, "unabel to receive from socket:", err)
 			continue
 		}
-		conn.WriteMessage(websocket.BinaryMessage, opusOggStream.FlushPacket(fragment))
+		conn.WriteMessage(websocket.BinaryMessage, fragment)
 	}
 
 }

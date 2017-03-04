@@ -24,10 +24,10 @@ create table stream(
     stream_server_id int not null,
     creator_id int not null,
     transport_url text not null,
-    event_id int not null,
+    event_id string not null,
     foreign key(creator_id) references user(id),
     foreign key(stream_server_id) references stream_server(id),
-    foreign key(event_id) references event(id)
+    foreign key(event_id) references event(short_id)
 );
 -- +migrate Down
 drop table event;

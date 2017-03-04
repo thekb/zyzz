@@ -42,6 +42,7 @@ const (
 				WHERE A.id=$1;`
 
 	GET_STREAMS = `SELECT A.* FROM stream A
+				WHERE A.event_id=$1
 				ORDER By A.id ASC;`
 
 	UPDATE_STREAM_STATUS = `UPDATE stream SET status=$1
@@ -70,7 +71,7 @@ type Stream struct {
 	CreatorId       int `db:"creator_id" json:"creator_id"`
 	StreamServerId  int `db:"stream_server_id" json:"stream_server_id"`
 	TransportUrl    string `db:"transport_url" json:"transport_url"`
-	EventId		int `db:"event_id" json:"event_id"`
+	EventId		string `db:"event_id" json:"event_id"`
 }
 
 type StreamServer struct {
@@ -143,9 +144,9 @@ func GetStreamForId(d *sqlx.DB, id int64) (Stream, error) {
 	return stream, err
 }
 
-func GetStreams(d *sqlx.DB) ([]Stream, error) {
+func GetStreams(d *sqlx.DB, event_id string) ([]Stream, error) {
 	var streams []Stream
-	err := db.Select(d, GET_STREAMS, &streams)
+	err := db.Select(d, GET_STREAMS, &streams, event_id)
 	if err != nil {
 		fmt.Println("unable to get streams:", err)
 	}

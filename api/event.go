@@ -62,6 +62,13 @@ func (ge *GetEvents) Serve(ctx *iris.Context) {
 }
 
 func (ges *GetEventStreams) Serve(ctx *iris.Context) {
-
+	event_shortId := ctx.GetString(SHORT_ID)
+	streams, err := models.GetStreams(ges.DB, event_shortId)
+	if err != nil {
+		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
+		return
+	}
+	ctx.JSON(iris.StatusOK, &Response{Data:streams})
+	return
 }
 
