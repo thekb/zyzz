@@ -71,7 +71,7 @@ func main() {
 
 
 	// event api
-	eventApi := app.Party("/api/event", sessionMiddleware)
+	eventApi := app.Party("/api/event")
 	eventApi.Handle("POST", "/", &api.CreateEvent{api.Common{DB:d}})
 	//eventApi.Handle("GET", "/:id", &api.GetEvent{api.Common{DB:d}})
 	eventApi.Handle("GET", "/", &api.GetEvents{api.Common{DB:d}})
@@ -79,7 +79,7 @@ func main() {
 	eventApi.Handle("POST", "/:id/stream", &api.CreateStream{api.Common{DB:d}})
 
 	//stream server api
-	streamServerApi := app.Party("/api/streamserver", sessionMiddleware)
+	streamServerApi := app.Party("/api/streamserver")
 	streamServerApi.Handle("POST", "/", &api.CreateStreamServer{api.Common{DB:d}})
 	streamServerApi.Handle("GET", "/:id", &api.GetStreamServer{api.Common{DB:d}})
 
@@ -89,7 +89,7 @@ func main() {
 	streamParty.Handle("GET", "/ws/subscribe/:id", &stream.WebSocketSubscriber{api.Common{DB:d}})
 	streamParty.Handle("GET", "/http/subscribe/:id", &stream.SubscribeStream{api.Common{DB:d}})
 
-	app.Handle("GET", "/control", &control.Control{api.Common{DB:d}})
+	app.Handle("GET", "/control", &control.Control{})
 
 	app.Listen(":8000")
 

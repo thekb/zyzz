@@ -19,8 +19,29 @@ class StreamFrame(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # StreamFrame
-    def Frame(self, j):
+    def FrameSize(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return 0
+
+    # StreamFrame
+    def SampleRate(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint32Flags, o + self._tab.Pos)
+        return 0
+
+    # StreamFrame
+    def Channels(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return 0
+
+    # StreamFrame
+    def Frame(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             a = self._tab.Vector(o)
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
@@ -28,12 +49,15 @@ class StreamFrame(object):
 
     # StreamFrame
     def FrameLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
-def StreamFrameStart(builder): builder.StartObject(1)
-def StreamFrameAddFrame(builder, frame): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(frame), 0)
+def StreamFrameStart(builder): builder.StartObject(4)
+def StreamFrameAddFrameSize(builder, frameSize): builder.PrependUint8Slot(0, frameSize, 0)
+def StreamFrameAddSampleRate(builder, sampleRate): builder.PrependUint32Slot(1, sampleRate, 0)
+def StreamFrameAddChannels(builder, channels): builder.PrependUint8Slot(2, channels, 0)
+def StreamFrameAddFrame(builder, frame): builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(frame), 0)
 def StreamFrameStartFrameVector(builder, numElems): return builder.StartVector(1, numElems, 1)
 def StreamFrameEnd(builder): return builder.EndObject()

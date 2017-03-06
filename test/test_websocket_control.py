@@ -18,7 +18,6 @@ event_id_pos = builder.CreateString("event_id")
 stream_id_pos = builder.CreateString("stream_id")
 StreamControl.StreamControlStart(builder)
 StreamControl.StreamControlAddStreamId(builder, stream_id_pos)
-StreamControl.
 stream_control_pos = StreamControl.StreamControlEnd(builder)
 
 EventMessage.EventMessageStart(builder)

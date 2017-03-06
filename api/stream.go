@@ -4,6 +4,7 @@ import (
 	"github.com/thekb/zyzz/db/models"
 	"fmt"
 	"gopkg.in/kataras/iris.v6"
+	"github.com/thekb/zyzz/control"
 )
 
 type CreateStream struct {
@@ -49,6 +50,8 @@ func (cs *CreateStream) Serve(ctx *iris.Context) {
 		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
 		return
 	}
+	// setup stream sockets
+	control.CreateStream(stream.ShortId)
 	stream, _ = models.GetStreamForId(cs.DB, id)
 	ctx.JSON(iris.StatusOK, &stream)
 	return

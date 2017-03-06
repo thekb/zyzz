@@ -19,22 +19,29 @@ class StreamMessage(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # StreamMessage
-    def StreamId(self):
+    def EventId(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return ""
 
     # StreamMessage
-    def MessageType(self):
+    def StreamId(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return ""
+
+    # StreamMessage
+    def MessageType(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # StreamMessage
     def Message(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             from flatbuffers.table import Table
             obj = Table(bytearray(), 0)
@@ -42,8 +49,17 @@ class StreamMessage(object):
             return obj
         return None
 
-def StreamMessageStart(builder): builder.StartObject(3)
-def StreamMessageAddStreamId(builder, streamId): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(streamId), 0)
-def StreamMessageAddMessageType(builder, messageType): builder.PrependUint8Slot(1, messageType, 0)
-def StreamMessageAddMessage(builder, message): builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(message), 0)
+    # StreamMessage
+    def Timestamp(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int64Flags, o + self._tab.Pos)
+        return 0
+
+def StreamMessageStart(builder): builder.StartObject(5)
+def StreamMessageAddEventId(builder, eventId): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(eventId), 0)
+def StreamMessageAddStreamId(builder, streamId): builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(streamId), 0)
+def StreamMessageAddMessageType(builder, messageType): builder.PrependUint8Slot(2, messageType, 0)
+def StreamMessageAddMessage(builder, message): builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(message), 0)
+def StreamMessageAddTimestamp(builder, timestamp): builder.PrependInt64Slot(4, timestamp, 0)
 def StreamMessageEnd(builder): return builder.EndObject()

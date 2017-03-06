@@ -34,7 +34,7 @@ func (rcv *StreamComment) UserId() []byte {
 	return nil
 }
 
-func (rcv *StreamComment) Text() []byte {
+func (rcv *StreamComment) UserName() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
 		return rcv._tab.ByteVector(o + rcv._tab.Pos)
@@ -42,8 +42,16 @@ func (rcv *StreamComment) Text() []byte {
 	return nil
 }
 
-func (rcv *StreamComment) Timestamp() int64 {
+func (rcv *StreamComment) Text() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
+	if o != 0 {
+		return rcv._tab.ByteVector(o + rcv._tab.Pos)
+	}
+	return nil
+}
+
+func (rcv *StreamComment) Timestamp() int64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
 	if o != 0 {
 		return rcv._tab.GetInt64(o + rcv._tab.Pos)
 	}
@@ -51,20 +59,23 @@ func (rcv *StreamComment) Timestamp() int64 {
 }
 
 func (rcv *StreamComment) MutateTimestamp(n int64) bool {
-	return rcv._tab.MutateInt64Slot(8, n)
+	return rcv._tab.MutateInt64Slot(10, n)
 }
 
 func StreamCommentStart(builder *flatbuffers.Builder) {
-	builder.StartObject(3)
+	builder.StartObject(4)
 }
 func StreamCommentAddUserId(builder *flatbuffers.Builder, userId flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(userId), 0)
 }
+func StreamCommentAddUserName(builder *flatbuffers.Builder, userName flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(userName), 0)
+}
 func StreamCommentAddText(builder *flatbuffers.Builder, text flatbuffers.UOffsetT) {
-	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(text), 0)
+	builder.PrependUOffsetTSlot(2, flatbuffers.UOffsetT(text), 0)
 }
 func StreamCommentAddTimestamp(builder *flatbuffers.Builder, timestamp int64) {
-	builder.PrependInt64Slot(2, timestamp, 0)
+	builder.PrependInt64Slot(3, timestamp, 0)
 }
 func StreamCommentEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()

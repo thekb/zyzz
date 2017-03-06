@@ -2,8 +2,9 @@
 
 # namespace: message
 
-class StreamAction(object):
-    BroadCast = 1
-    Pause = 2
-    Stop = 3
+class Status(object):
+    OK = 1
+    NoStream = 2
+    NotAllowed = 3
+    Error = 4
 

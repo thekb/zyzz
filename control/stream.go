@@ -1,65 +1,118 @@
 package control
 
 import (
-	"github.com/thekb/zyzz/message"
-	fb "github.com/google/flatbuffers/go"
 	"fmt"
+	"github.com/go-mangos/mangos"
+	"github.com/go-mangos/mangos/protocol/pub"
+	"github.com/go-mangos/mangos/transport/tcp"
+	"sync"
+	"github.com/go-mangos/mangos/protocol/pull"
+	"errors"
 )
 
-// when true tells the handler to setup subscriber for stream
-func HandleStreamMessage(msg []byte) bool {
-	streamMessage := message.GetRootAsStreamMessage(msg, 0)
-	streamId := string(streamMessage.StreamId())
-	messageTable := new(fb.Table)
-	streamMessage.Message(messageTable)
+const (
+	STREAM_TRANSPORT_URL_FORMAT = "tcp://%s:%d"
+)
 
-	switch streamMessage.MessageType() {
-	case message.MessageStreamControl:
-		controlMessage := new(message.StreamControl)
-		controlMessage.Init(messageTable.Bytes, messageTable.Pos)
-		return handleStreamControl(streamId, controlMessage)
-	case message.MessageStreamFrame:
-		streamFrame := new(message.StreamFrame)
-		streamFrame.Init(messageTable.Bytes, messageTable.Pos)
-		return handleStreamFrame(streamId, streamFrame)
-	case message.MessageStreamComment:
-		streamComment := new(message.StreamComment)
-		streamComment.Init(messageTable.Bytes, messageTable.Pos)
-		return handleStreamComment(streamId, streamComment)
-	default:
-		fmt.Println("invalid message")
+var (
+	STREAM_ALREADY_EXISTS = errors.New("Stream Already Exists")
+	STREAM_INIT_ERROR = errors.New("Unable to initialize stream")
+	STREAM_NOT_FOUND = errors.New("Stream not found")
+	STREAM_NOT_ALLOWED = errors.New("Stream not allowed")
+)
+
+type Stream struct {
+	m              sync.Mutex
+	pubSock        mangos.Socket // used to publish data to clients
+	pullSock       mangos.Socket // used to pull data from clients
+	PublishSockURL string        // url for publish socket
+	PullSockURL    string        // url for pull socket
+	PublishUser    int        // userid for user who is publishing
+
+}
+
+func (s *Stream)Init() error {
+	var err error
+	// setup publish socket
+	s.pubSock, err = pub.NewSocket()
+	if err != nil {
+		fmt.Println("unable to create new pub socket:", err)
+		return err
 	}
-	return false
-}
-
-func handleStreamControl(streamId string, controlMessage *message.StreamControl) bool {
-	fmt.Println("reveived stream control message")
-	switch controlMessage.StreamAction() {
-	case message.StreamActionStart:
-		fmt.Println("received stream start")
-		//set stream state started
-	case message.StreamActionPause:
-		fmt.Println("received stream pause")
-		//set stream state paused and broadcast to subscribers
-	case message.StreamActionStop:
-		fmt.Println("received stream stop")
-		//set stream state stopped and broadcast to subscribers
-	case message.StreamActionSubscribe:
-		fmt.Println("received stream subscribe")
-		// increment stream subscriber count
-		return true
+	s.pubSock.AddTransport(tcp.NewTransport())
+	PubOpenPort, err := GetFreePort()
+	if err != nil {
+		fmt.Println("unable to get open tcp port:", err)
+		return err
 	}
-	return false
-
+	s.PublishSockURL = fmt.Sprintf(STREAM_TRANSPORT_URL_FORMAT, "127.0.0.1", PubOpenPort)
+	// timeout sending a message after 10 milliseconds
+	err = s.pubSock.Listen(s.PublishSockURL)
+	if err != nil {
+		fmt.Println("unable to listen at stream transport url:", err)
+		return err
+	}
+	// setup pull socket
+	s.pullSock, err = pull.NewSocket()
+	if err != nil {
+		fmt.Println("unable to create new pull socket")
+		return err
+	}
+	s.pullSock.AddTransport(tcp.NewTransport())
+	pullOpenPort, err := GetFreePort()
+	s.PullSockURL = fmt.Sprintf(STREAM_TRANSPORT_URL_FORMAT, "127.0.0.1", pullOpenPort)
+	err = s.pullSock.Listen(s.PullSockURL)
+	if err != nil {
+		fmt.Println("unable to listen at stream transport url:", err)
+		return err
+	}
+	// copy in the background
+	go s.copy()
+	return nil
 }
 
-func handleStreamFrame(streamId string, streamFrame *message.StreamFrame) bool {
-	fmt.Println("reveived stream frame message")
-	// publish stream bytes to socket
-	streamFrame.FrameBytes()
-	return false
+// copies data from pull socket to publish socket
+func (s *Stream) copy() {
+	var err error
+	var msg []byte
+	for {
+		msg, err = s.pullSock.Recv()
+		if err != nil {
+			fmt.Println("unable to receive message from pull:", err)
+			continue
+		}
+		err = s.pubSock.Send(msg)
+		if err != nil {
+			fmt.Println("unable to send message to pub:, err")
+		}
+	}
 }
 
-func handleStreamComment(streamId string, streamComment *message.StreamComment) bool {
-	return false
+
+var streams map[string]*Stream
+
+func CreateStream(streamId string) error {
+	stream, ok := streams[streamId]
+	if !ok {
+		// stream not found
+		stream = &Stream{}
+		err := stream.Init()
+		streams[streamId] = stream
+		// setup required sockets for stream
+		if err != nil {
+			fmt.Println("Unable to initilaze stream:", err)
+			return STREAM_INIT_ERROR
+		}
+	} else {
+		return STREAM_ALREADY_EXISTS
+	}
+	return nil
+}
+
+func GetStream(streamId string) (*Stream, error) {
+	stream, ok := streams[streamId]
+	if !ok {
+		return nil, STREAM_NOT_FOUND
+	}
+	return stream, nil
 }

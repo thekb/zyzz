@@ -26,7 +26,7 @@ func (rcv *StreamMessage) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func (rcv *StreamMessage) StreamId() []byte {
+func (rcv *StreamMessage) EventId() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
 	if o != 0 {
 		return rcv._tab.ByteVector(o + rcv._tab.Pos)
@@ -34,8 +34,16 @@ func (rcv *StreamMessage) StreamId() []byte {
 	return nil
 }
 
-func (rcv *StreamMessage) MessageType() byte {
+func (rcv *StreamMessage) StreamId() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		return rcv._tab.ByteVector(o + rcv._tab.Pos)
+	}
+	return nil
+}
+
+func (rcv *StreamMessage) MessageType() byte {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		return rcv._tab.GetByte(o + rcv._tab.Pos)
 	}
@@ -43,11 +51,11 @@ func (rcv *StreamMessage) MessageType() byte {
 }
 
 func (rcv *StreamMessage) MutateMessageType(n byte) bool {
-	return rcv._tab.MutateByteSlot(6, n)
+	return rcv._tab.MutateByteSlot(8, n)
 }
 
 func (rcv *StreamMessage) Message(obj *flatbuffers.Table) bool {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
 	if o != 0 {
 		rcv._tab.Union(obj, o)
 		return true
@@ -55,17 +63,35 @@ func (rcv *StreamMessage) Message(obj *flatbuffers.Table) bool {
 	return false
 }
 
+func (rcv *StreamMessage) Timestamp() int64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(12))
+	if o != 0 {
+		return rcv._tab.GetInt64(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *StreamMessage) MutateTimestamp(n int64) bool {
+	return rcv._tab.MutateInt64Slot(12, n)
+}
+
 func StreamMessageStart(builder *flatbuffers.Builder) {
-	builder.StartObject(3)
+	builder.StartObject(5)
+}
+func StreamMessageAddEventId(builder *flatbuffers.Builder, eventId flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(eventId), 0)
 }
 func StreamMessageAddStreamId(builder *flatbuffers.Builder, streamId flatbuffers.UOffsetT) {
-	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(streamId), 0)
+	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(streamId), 0)
 }
 func StreamMessageAddMessageType(builder *flatbuffers.Builder, messageType byte) {
-	builder.PrependByteSlot(1, messageType, 0)
+	builder.PrependByteSlot(2, messageType, 0)
 }
 func StreamMessageAddMessage(builder *flatbuffers.Builder, message flatbuffers.UOffsetT) {
-	builder.PrependUOffsetTSlot(2, flatbuffers.UOffsetT(message), 0)
+	builder.PrependUOffsetTSlot(3, flatbuffers.UOffsetT(message), 0)
+}
+func StreamMessageAddTimestamp(builder *flatbuffers.Builder, timestamp int64) {
+	builder.PrependInt64Slot(4, timestamp, 0)
 }
 func StreamMessageEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()

@@ -4,7 +4,11 @@
 
 class Message(object):
     NONE = 0
-    StreamControl = 1
-    StreamFrame = 2
-    StreamComment = 3
+    StreamBroadCast = 1
+    StreamPause = 2
+    StreamStop = 3
+    StreamFrame = 4
+    StreamComment = 5
+    StreamSubscribe = 6
+    StreamResponse = 7
 

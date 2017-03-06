@@ -26,32 +26,8 @@ func (rcv *StreamControl) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func (rcv *StreamControl) SampleRate() uint32 {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
-	if o != 0 {
-		return rcv._tab.GetUint32(o + rcv._tab.Pos)
-	}
-	return 0
-}
-
-func (rcv *StreamControl) MutateSampleRate(n uint32) bool {
-	return rcv._tab.MutateUint32Slot(4, n)
-}
-
-func (rcv *StreamControl) Channels() byte {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
-	if o != 0 {
-		return rcv._tab.GetByte(o + rcv._tab.Pos)
-	}
-	return 0
-}
-
-func (rcv *StreamControl) MutateChannels(n byte) bool {
-	return rcv._tab.MutateByteSlot(6, n)
-}
-
 func (rcv *StreamControl) FrameSize() byte {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
 	if o != 0 {
 		return rcv._tab.GetByte(o + rcv._tab.Pos)
 	}
@@ -59,11 +35,11 @@ func (rcv *StreamControl) FrameSize() byte {
 }
 
 func (rcv *StreamControl) MutateFrameSize(n byte) bool {
-	return rcv._tab.MutateByteSlot(8, n)
+	return rcv._tab.MutateByteSlot(4, n)
 }
 
 func (rcv *StreamControl) StreamAction() int8 {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
 		return rcv._tab.GetInt8(o + rcv._tab.Pos)
 	}
@@ -71,11 +47,11 @@ func (rcv *StreamControl) StreamAction() int8 {
 }
 
 func (rcv *StreamControl) MutateStreamAction(n int8) bool {
-	return rcv._tab.MutateInt8Slot(10, n)
+	return rcv._tab.MutateInt8Slot(6, n)
 }
 
 func (rcv *StreamControl) Encoding() int8 {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(12))
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		return rcv._tab.GetInt8(o + rcv._tab.Pos)
 	}
@@ -83,26 +59,20 @@ func (rcv *StreamControl) Encoding() int8 {
 }
 
 func (rcv *StreamControl) MutateEncoding(n int8) bool {
-	return rcv._tab.MutateInt8Slot(12, n)
+	return rcv._tab.MutateInt8Slot(8, n)
 }
 
 func StreamControlStart(builder *flatbuffers.Builder) {
-	builder.StartObject(5)
-}
-func StreamControlAddSampleRate(builder *flatbuffers.Builder, sampleRate uint32) {
-	builder.PrependUint32Slot(0, sampleRate, 0)
-}
-func StreamControlAddChannels(builder *flatbuffers.Builder, channels byte) {
-	builder.PrependByteSlot(1, channels, 0)
+	builder.StartObject(3)
 }
 func StreamControlAddFrameSize(builder *flatbuffers.Builder, frameSize byte) {
-	builder.PrependByteSlot(2, frameSize, 0)
+	builder.PrependByteSlot(0, frameSize, 0)
 }
 func StreamControlAddStreamAction(builder *flatbuffers.Builder, streamAction int8) {
-	builder.PrependInt8Slot(3, streamAction, 1)
+	builder.PrependInt8Slot(1, streamAction, 1)
 }
 func StreamControlAddEncoding(builder *flatbuffers.Builder, encoding int8) {
-	builder.PrependInt8Slot(4, encoding, 1)
+	builder.PrependInt8Slot(2, encoding, 1)
 }
 func StreamControlEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()

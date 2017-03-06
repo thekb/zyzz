@@ -3,16 +3,14 @@
 package message
 
 const (
-	StreamActionStart = 1
+	StreamActionBroadCast = 1
 	StreamActionPause = 2
 	StreamActionStop = 3
-	StreamActionSubscribe = 4
 )
 
 var EnumNamesStreamAction = map[int]string{
-	StreamActionStart:"Start",
+	StreamActionBroadCast:"BroadCast",
 	StreamActionPause:"Pause",
 	StreamActionStop:"Stop",
-	StreamActionSubscribe:"Subscribe",
 }
 

@@ -1,33 +1,53 @@
 namespace message;
 
 
-enum StreamAction : byte {Start = 1, Pause, Stop, Subscribe}
+enum StreamAction : byte {BroadCast = 1, Pause, Stop}
 enum InputEncoding : byte {Opus = 1, PCM, AAC}
+enum Status : byte {OK = 1, NoStream, NotAllowed, Error}
 
-table StreamControl {
-    sample_rate:uint;
-    channels:ubyte;
-    frame_size:ubyte;
-    stream_action:StreamAction = Start;
+table StreamSubscribe {
+
+}
+
+table StreamBroadCast {
     encoding:InputEncoding = Opus;
 }
 
+table StreamPause {
+
+}
+
+table StreamStop {
+
+}
+
+
 table StreamFrame {
+    frame_size:ubyte;
+    sample_rate:uint;
+    channels:ubyte;
     frame:[ubyte];
 }
 
 table StreamComment {
     user_id:string;
+    user_name:string;
     text:string;
     timestamp:long;
 }
 
+table StreamResponse {
+    status:Status = OK;
+}
 
-union Message {StreamControl, StreamFrame, StreamComment}
+
+union Message {StreamBroadCast, StreamPause, StreamStop, StreamFrame, StreamComment, StreamSubscribe, StreamResponse}
 
 table StreamMessage {
+    event_id:string;
     stream_id:string;
     message:Message;
+    timestamp:long;
 }
 
 root_type StreamMessage;
