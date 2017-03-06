@@ -1,9 +1,8 @@
 package api
 
 import (
-	"net/http"
 	"github.com/thekb/zyzz/db/models"
-	"github.com/gorilla/mux"
+	"gopkg.in/kataras/iris.v6"
 )
 
 type CreateUser struct {
@@ -14,27 +13,49 @@ type GetUser struct {
 	Common
 }
 
-func (cuh CreateUser) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+type GetUserStream struct {
+	Common
+}
+
+type GetCurrentUserStream struct {
+	Common
+}
+
+func (cuh CreateUser) Serve(ctx *iris.Context)  {
 	var user models.User
-	cuh.decodeRequestJSON(r, &user)
+	err := ctx.ReadJSON(&user)
+	if err != nil {
+		ctx.Log(iris.ProdMode, "unable to decode request %s", err.Error())
+		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		return
+	}
 	user.ShortId = getNewShortId()
 	id, err := models.CreateUser(cuh.DB, &user)
 	if err != nil {
-		cuh.SendErrorJSON(rw, err.Error(), http.StatusBadRequest)
+		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
 		return
 	}
 	user, _ = models.GetUserForId(cuh.DB, id)
-	cuh.SendJSON(rw, &user)
+	ctx.JSON(iris.StatusOK, Response{Data:user})
+	return
 }
 
-func (guh GetUser) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	shortId := vars[SHORT_ID]
+func (guh GetUser) Serve(ctx *iris.Context) {
+	shortId := ctx.GetString(SHORT_ID)
 	user, err := models.GetUserForShortId(guh.DB, shortId)
 	if err != nil {
-		guh.SendErrorJSON(rw, err.Error(), http.StatusBadRequest)
+		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		return
 	}
-	guh.SendJSON(rw, &user)
+	ctx.JSON(iris.StatusOK, Response{Data:user})
+	return
 }
 
 
+func (gus GetUserStream) Serve(ctx *iris.Context) {
+
+}
+
+func (gcus GetCurrentUserStream) Serve(ctx *iris.Context) {
+
+}

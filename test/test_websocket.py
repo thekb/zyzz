@@ -1,9 +1,36 @@
 from websocket import create_connection
-ws = create_connection("ws://localhost:8000/stream/publish/peGO6A--C/")
-print "Sending 'Hello, World'..."
-ws.send("Hello, World")
-print "Sent"
-print "Receiving..."
-result =  ws.recv()
-print "Received '%s'" % result
-ws.close()
+import pyaudio
+import message
+import time
+import struct
+import array
+import binascii
+
+p = pyaudio.PyAudio()
+# 16 bits per sample ?
+FORMAT = pyaudio.paInt16
+# 44.1k sampling rate ?
+RATE = 24000
+# number of channels
+CHANNELS = 1
+FRAME_SIZE = 60  # in milliseconds
+# frames per buffer ?
+CHUNK = int(RATE * FRAME_SIZE/1000)
+STREAM = p.open(
+    format=FORMAT,
+    channels=CHANNELS,
+    rate=RATE,
+    input=True,
+    frames_per_buffer=CHUNK
+)
+print "initialized stream"
+
+URL = "ws://localhost:8000/stream/uPeDTmCC-/publish"
+i = 0
+
+
+ws = create_connection(URL)
+while True:
+    chunk = STREAM.read(CHUNK)
+    ws.send_binary(chunk)
+    i += 1

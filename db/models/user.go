@@ -8,8 +8,10 @@ import (
 )
 
 const (
-	CREATE_USER = `INSERT INTO user (short_id, name, description)
-			VALUES (:short_id, :name, :description);`
+	CREATE_USER = `INSERT INTO user (short_id, name, description, email, nickname, avatarurl, fbid, access_token)
+			VALUES (:short_id, :name, :description, :email, :nickname, :avatarurl, :fbid, :access_token);`
+	UPDATE_USER = `UPDATE user set name=:name, description=:description, email=:email, nickname=:nickname,
+	 		avatarurl=:avatarurl, access_token=:access_token WHERE user.short_id=:short_id;`
 	GET_USER_SHORT_ID = `SELECT A.* FROM user A
 			WHERE A.short_id=$1;`
 	GET_USER_ID = `SELECT A.* FROM user A
@@ -17,17 +19,22 @@ const (
 	GET_DEFAULT_USER = `SELECT A.* FROM user A
 	 		ORDER BY A.id
 	 		ASC LIMIT 1;`
-
+	GET_USER_FBID = `SELECT A.* FROM user A WHERE A.fbid=$1`
 )
 
 type User struct {
-	Id int `db:"id" json:"-"`
-	Name string `db:"name" json:"name"`
+	Id          int `db:"id" json:"-"`
+	Name        string `db:"name" json:"name"`
 	Description string `db:"description" json:"description"`
-	ShortId string `db:"short_id" json:"id"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	Published int `db:"published" json:"published"`
-	Subscribed int `db:"subscribed" json:"subscribed"`
+	ShortId     string `db:"short_id" json:"id"`
+	CreatedAt   time.Time `db:"created_at" json:"created_at"`
+	Published   int `db:"published" json:"published"`
+	Subscribed  int `db:"subscribed" json:"subscribed"`
+	Email       string `db:"email" json:"email"`
+	NickName    string `db:"nickname" json:"nickname"`
+	AvatarURL   string `db:"avatarurl" json:"avatarurl"`
+	FBId        string `db:"fbid" json:"fbid"`
+	AccessToken string `db:"access_token" json:"access_token"`
 }
 
 func CreateUser(d *sqlx.DB, user *User) (int64, error) {
@@ -38,12 +45,30 @@ func CreateUser(d *sqlx.DB, user *User) (int64, error) {
 	return id, err
 }
 
+func UpdateUser(d *sqlx.DB, user *User) (int64, error) {
+	err := db.UpdateObj(d, UPDATE_USER, user)
+	if err != nil {
+		fmt.Println("unable to update user:", err)
+	}
+	return 1, err
+}
+
 func GetUserForShortId(d *sqlx.DB, short_id string) (User, error) {
 	var user User
 	err := db.Get(d, GET_USER_SHORT_ID, &user, short_id)
 	if err != nil {
 		fmt.Println("unable to fetch user:", err)
 	}
+	return user, err
+}
+
+func GetUserForFBId(d *sqlx.DB, fbid string) (User, error) {
+	var user User
+	err := db.Get(d, GET_USER_FBID, &user, fbid)
+	if err != nil {
+		fmt.Println("unable to fetch user:", err)
+	}
+	fmt.Println("got user")
 	return user, err
 }
 

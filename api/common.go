@@ -10,7 +10,7 @@ import (
 const (
 	HEADER_CONTENT_TYPE = "Content-Type"
 	JSON_CONTENT_TYPE = "application/json"
-	SHORT_ID = "shortId"
+	SHORT_ID = "id"
 )
 
 var shortIdGenerator *shortid.Shortid
