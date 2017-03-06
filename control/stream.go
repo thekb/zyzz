@@ -91,6 +91,10 @@ func (s *Stream) copy() {
 
 var streams map[string]*Stream
 
+func init() {
+	streams = make(map[string]*Stream)
+}
+
 func CreateStream(streamId string) error {
 	stream, ok := streams[streamId]
 	if !ok {

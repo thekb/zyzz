@@ -42,7 +42,7 @@ const (
 				WHERE A.id=$1;`
 
 	GET_STREAMS = `SELECT A.* FROM stream A
-				WHERE A.event_id=$1
+				WHERE A.event_id=$1 and status=1
 				ORDER By A.id ASC;`
 
 	UPDATE_STREAM_STATUS = `UPDATE stream SET status=$1

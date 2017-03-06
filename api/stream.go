@@ -44,7 +44,7 @@ func (cs *CreateStream) Serve(ctx *iris.Context) {
 		return
 	}
 	// setup stream sockets
-	control.CreateStream(stream.ShortId)
+	err = control.CreateStream(stream.ShortId)
 	stream, _ = models.GetStreamForId(cs.DB, id)
 	ctx.JSON(iris.StatusOK, &stream)
 	return
