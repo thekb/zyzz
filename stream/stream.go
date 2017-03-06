@@ -84,8 +84,6 @@ func (ps *PublishStream) publish(stream models.Stream, conn *websocket.Conn) err
 		fmt.Println("unable to init ops encoder:", err)
 		return err
 	}
-	//output := make([]byte, 1024)
-	//encoderInput := make([]int16, 480)
 	//TODO optimize with io reader
 	for {
 		_, input, err = conn.ReadMessage()
@@ -93,22 +91,6 @@ func (ps *PublishStream) publish(stream models.Stream, conn *websocket.Conn) err
 			fmt.Println("error reading message:", err)
 			break
 		}
-		/*
-		err = binary.Read(bytes.NewReader(input), binary.LittleEndian, &encoderInput)
-		if err != nil {
-			fmt.Println("error reading message:", err)
-			continue
-		}
-		//outputSize, err = opusEncoder.Encode(encoderInput, output)
-		if err != nil {
-			fmt.Println("unable to encode pcm to opus:", err)
-			continue
-		}
-
-		if outputSize > 2 {
-			sock.Send(output[:outputSize])
-		}
-		*/
 		sock.Send(input)
 
 
@@ -213,28 +195,6 @@ func (wss *WebSocketSubscriber) Serve(ctx *iris.Context) {
 
 	models.IncrementStreamSubscriberCount(wss.DB, shortId)
 
-	/*
-	comments := make(map[string]string)
-	comments["NAME"] = "TEST STREAM"
-	comments["ALBUM"] = "TEST ALBUM"
-	opusOggStream := encode.OpusOggStream{
-		StreamId: rand.Int31(),
-		Channels: 1,
-		PreSkip: 0,
-		InputSampleRate: 24000,
-		OutPutGain: 0,
-		ChannelMap: 0,
-		VendorString: "thekb zyzz encoder",
-		Comments: comments,
-		FrameSize: 10.0,
-	}
-	err = conn.WriteMessage(websocket.BinaryMessage, opusOggStream.Start())
-	if err != nil {
-		ctx.Log(iris.ProdMode, "unable to write stream headers, closing:", err)
-		conn.Close()
-		return
-	}
-	*/
 	var sock mangos.Socket
 	var fragment []byte
 	if sock, err = sub.NewSocket(); err != nil {

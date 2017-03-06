@@ -33,8 +33,8 @@ type User struct {
 	Email       string `db:"email" json:"email"`
 	NickName    string `db:"nickname" json:"nickname"`
 	AvatarURL   string `db:"avatarurl" json:"avatarurl"`
-	FBId        string `db:"fbid" json:"fbid"`
-	AccessToken string `db:"access_token" json:"access_token"`
+	FBId        string `db:"fbid" json:"_"`
+	AccessToken string `db:"access_token" json:"_"`
 }
 
 func CreateUser(d *sqlx.DB, user *User) (int64, error) {

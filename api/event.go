@@ -68,6 +68,13 @@ func (ges *GetEventStreams) Serve(ctx *iris.Context) {
 		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
 		return
 	}
+	for i := 0; i < len(streams); i++ {
+		user_publish, err := models.GetUserForId(ges.DB, int64(streams[i].CreatorId))
+		if err == nil {
+			streams[i].User = user_publish
+		}
+
+	}
 	ctx.JSON(iris.StatusOK, &Response{Data:streams})
 	return
 }

@@ -72,6 +72,7 @@ type Stream struct {
 	StreamServerId  int `db:"stream_server_id" json:"stream_server_id"`
 	TransportUrl    string `db:"transport_url" json:"transport_url"`
 	EventId		string `db:"event_id" json:"event_id"`
+	User 		User `db:"_" json:"user"`
 }
 
 type StreamServer struct {
