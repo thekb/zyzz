@@ -70,12 +70,15 @@ func main() {
 	userApi.Handle("GET", "/:id/streams/current", &api.GetCurrentUserStream{api.Common{DB:d}})
 
 
-	// event api
-	eventApi := app.Party("/api/event")
+	// event api no auth
+	eventApiNoAuth := app.Party("/api/event")
+	eventApiNoAuth.Handle("GET", "/", &api.GetEvents{api.Common{DB:d}})
+	eventApiNoAuth.Handle("GET", "/:id/stream", &api.GetEventStreams{api.Common{DB:d}})
+
+	// event api auth
+	eventApi := app.Party("/api/event", sessionMiddleware)
 	eventApi.Handle("POST", "/", &api.CreateEvent{api.Common{DB:d}})
-	//eventApi.Handle("GET", "/:id", &api.GetEvent{api.Common{DB:d}})
-	eventApi.Handle("GET", "/", &api.GetEvents{api.Common{DB:d}})
-	eventApi.Handle("GET", "/:id/stream", &api.GetEventStreams{api.Common{DB:d}})
+	eventApi.Handle("PUT", "/:id", &api.UpdateEvent{api.Common{DB:d}})
 	eventApi.Handle("POST", "/:id/stream", &api.CreateStream{api.Common{DB:d}})
 
 	//stream server api

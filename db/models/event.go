@@ -10,6 +10,9 @@ import (
 const (
 	CREATE_EVENT = `INSERT INTO event (name, description, short_id, starttime, endtime, running_now)
 			VALUES (:name, :description, :short_id, :starttime, :endtime, :running_now);`
+	UPDATE_EVENT = `UPDATE event set name=:name, description=:description, starttime=:starttime,
+			endtime=:endtime, running_now=:running_now
+			WHERE event.short_id=:short_id`
 	GET_EVENT_ID = `SELECT E.* FROM event E
 			WHERE E.id=$1;`
 	GET_EVENT_SHORT_ID = `SELECT E.* FROM event E
@@ -20,7 +23,7 @@ const (
 )
 
 type Event struct {
-	Id          int `db:"id" json:"-"`
+	Id          int64 `db:"id" json:"-"`
 	Name        string `db:"name" json:"name"`
 	Description string `db:"description" json:"description"`
 	ShortId     string `db:"short_id" json:"id"`
@@ -37,6 +40,14 @@ func CreateEvent(d *sqlx.DB, event *Event) (int64, error) {
 		fmt.Println("unable to create event:", err)
 	}
 	return id, err
+}
+
+func UpdateEvent(d *sqlx.DB, event *Event) (error) {
+	err := db.UpdateObj(d, UPDATE_EVENT, event)
+	if err != nil {
+		fmt.Println("Unable to update event", err)
+	}
+	return err
 }
 
 func GetEventForId(d *sqlx.DB, id int64) (Event, error) {

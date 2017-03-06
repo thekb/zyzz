@@ -17,6 +17,10 @@ type CreateEvent struct {
 	Common
 }
 
+type UpdateEvent struct {
+	Common
+}
+
 type GetEventStreams struct {
 	Common
 }
@@ -47,6 +51,31 @@ func (ce *CreateEvent) Serve(ctx *iris.Context) {
 		return
 	}
 	event, _ = models.GetEventForId(ce.DB, id)
+	ctx.JSON(iris.StatusOK, Response{Data:event})
+	return
+}
+
+func (ce *UpdateEvent) Serve(ctx *iris.Context) {
+	//var event models.Event
+	event_shortId := ctx.GetString(SHORT_ID)
+	event, err := models.GetEventForShortId(ce.DB, event_shortId)
+	if err != nil {
+		ctx.Log(iris.ProdMode, "Not able to fetch an event %s", err.Error())
+		ctx.JSON(iris.StatusNotFound, Response{Error:err.Error()})
+		return
+	}
+	err = ctx.ReadJSON(&event)
+	if err != nil {
+		ctx.Log(iris.ProdMode, "unable to decode request %s", err.Error())
+		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		return
+	}
+	err = models.UpdateEvent(ce.DB, &event)
+	if err != nil {
+		ctx.JSON(iris.StatusInternalServerError, Response{Error:err.Error()})
+		return
+	}
+	event, _ = models.GetEventForId(ce.DB, event.Id)
 	ctx.JSON(iris.StatusOK, Response{Data:event})
 	return
 }
