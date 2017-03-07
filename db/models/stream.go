@@ -42,7 +42,7 @@ const (
 				WHERE A.id=$1;`
 
 	GET_STREAMS = `SELECT A.* FROM stream A
-				WHERE A.event_id=$1
+				WHERE A.event_id=$1 and status=1
 				ORDER By A.id ASC;`
 
 	UPDATE_STREAM_STATUS = `UPDATE stream SET status=$1
@@ -72,6 +72,7 @@ type Stream struct {
 	StreamServerId  int `db:"stream_server_id" json:"stream_server_id"`
 	TransportUrl    string `db:"transport_url" json:"transport_url"`
 	EventId		string `db:"event_id" json:"event_id"`
+	User 		User `db:"_" json:"user"`
 }
 
 type StreamServer struct {
