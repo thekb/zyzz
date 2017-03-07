@@ -33,7 +33,7 @@ type User struct {
 	Email       string `db:"email" json:"email"`
 	NickName    string `db:"nickname" json:"nickname"`
 	AvatarURL   string `db:"avatarurl" json:"avatarurl"`
-	FBId        string `db:"fbid" json:"_"`
+	FBId        string `db:"fbid" json:"fbid"`
 	AccessToken string `db:"access_token" json:"_"`
 }
 
