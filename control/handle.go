@@ -110,7 +110,7 @@ func (ctx *ControlContext) CopyToWS() {
 			if err != nil {
 				if ws.IsCloseError(err) || ws.IsUnexpectedCloseError(err) {
 					fmt.Println("websocket connection closed:", err)
-					break
+					break COPY
 				} else {
 					fmt.Println("unable to write message to web socket:", err)
 				}

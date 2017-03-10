@@ -16,7 +16,7 @@ const (
 	INPUT_CHANNELS = 1
 	OUTPUT_CHANNELS = 0
 	SAMPLE_RATE = 24000
-	FRAMES_SIZE = 5 // in milliseconds
+	FRAMES_SIZE = 20 // in milliseconds
 	FRAMES_PER_BUFFER = int(SAMPLE_RATE * FRAMES_SIZE/1000)
 )
 
@@ -24,7 +24,7 @@ const (
 func main() {
 	var err error
 	var wsRead []byte
-	streamId := "akhwsh1--"
+	streamId := "uuZnyh5CC"
 	eventId := "pfYX3Z1C-"
 	b := fb.NewBuilder(1024)
 	pa.Initialize()
@@ -96,7 +96,7 @@ func main() {
 	encoder, err = opus.NewEncoder(SAMPLE_RATE, INPUT_CHANNELS, opus.AppAudio)
 
 	fmt.Println("sending stream")
-	timeout := time.After(time.Millisecond * 100)
+	timeout := time.After(time.Second * 60)
 	ticker := time.Tick(time.Millisecond * FRAMES_SIZE)
 
 	L:
