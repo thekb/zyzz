@@ -9,15 +9,6 @@ var message = message || {};
 /**
  * @enum
  */
-message.StreamAction = {
-  BroadCast: 1,
-  Pause: 2,
-  Stop: 3
-};
-
-/**
- * @enum
- */
 message.InputEncoding = {
   Opus: 1,
   PCM: 2,
@@ -460,7 +451,7 @@ message.StreamComment.getRootAsStreamComment = function(bb, obj) {
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array}
  */
-message.StreamComment.prototype.userId = function(optionalEncoding) {
+message.StreamComment.prototype.userName = function(optionalEncoding) {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
 };
@@ -469,41 +460,16 @@ message.StreamComment.prototype.userId = function(optionalEncoding) {
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array}
  */
-message.StreamComment.prototype.userName = function(optionalEncoding) {
+message.StreamComment.prototype.text = function(optionalEncoding) {
   var offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
-};
-
-/**
- * @param {flatbuffers.Encoding=} optionalEncoding
- * @returns {string|Uint8Array}
- */
-message.StreamComment.prototype.text = function(optionalEncoding) {
-  var offset = this.bb.__offset(this.bb_pos, 8);
-  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
-};
-
-/**
- * @returns {flatbuffers.Long}
- */
-message.StreamComment.prototype.timestamp = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? this.bb.readInt64(this.bb_pos + offset) : this.bb.createLong(0, 0);
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
 message.StreamComment.startStreamComment = function(builder) {
-  builder.startObject(4);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} userIdOffset
- */
-message.StreamComment.addUserId = function(builder, userIdOffset) {
-  builder.addFieldOffset(0, userIdOffset, 0);
+  builder.startObject(2);
 };
 
 /**
@@ -511,7 +477,7 @@ message.StreamComment.addUserId = function(builder, userIdOffset) {
  * @param {flatbuffers.Offset} userNameOffset
  */
 message.StreamComment.addUserName = function(builder, userNameOffset) {
-  builder.addFieldOffset(1, userNameOffset, 0);
+  builder.addFieldOffset(0, userNameOffset, 0);
 };
 
 /**
@@ -519,15 +485,7 @@ message.StreamComment.addUserName = function(builder, userNameOffset) {
  * @param {flatbuffers.Offset} textOffset
  */
 message.StreamComment.addText = function(builder, textOffset) {
-  builder.addFieldOffset(2, textOffset, 0);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Long} timestamp
- */
-message.StreamComment.addTimestamp = function(builder, timestamp) {
-  builder.addFieldInt64(3, timestamp, builder.createLong(0, 0));
+  builder.addFieldOffset(1, textOffset, 0);
 };
 
 /**

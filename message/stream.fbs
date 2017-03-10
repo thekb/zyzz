@@ -1,7 +1,5 @@
 namespace message;
 
-
-enum StreamAction : byte {BroadCast = 1, Pause, Stop}
 enum InputEncoding : byte {Opus = 1, PCM, AAC}
 enum Status : byte {OK = 1, NoStream, NotAllowed, Error}
 
@@ -21,7 +19,6 @@ table StreamStop {
 
 }
 
-
 table StreamFrame {
     frame_size:ubyte;
     sample_rate:uint;
@@ -30,10 +27,8 @@ table StreamFrame {
 }
 
 table StreamComment {
-    user_id:string;
     user_name:string;
     text:string;
-    timestamp:long;
 }
 
 table StreamResponse {

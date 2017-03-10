@@ -98,6 +98,7 @@ func init() {
 func CreateStream(streamId string) error {
 	stream, ok := streams[streamId]
 	if !ok {
+		fmt.Println("existing stream not found")
 		// stream not found
 		stream = &Stream{}
 		err := stream.Init()

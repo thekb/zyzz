@@ -1,0 +1,20 @@
+namespace message;
+
+enum RpcStatus : byte {OK = 1, Error}
+
+table SetupStreamRequest {
+    stream_id:string;
+}
+
+table SetupStreamResponse {
+    stream_id:string;
+    status:RpcStatus = OK;
+}
+
+
+rpc_service StreamRPC {
+    // setup required
+    Setup(SetupStreamRequest):SetupStreamResponse;
+}
+
+root_type SetupStreamRequest;
