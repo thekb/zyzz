@@ -14,9 +14,7 @@ import (
 	"gopkg.in/kataras/iris.v6/middleware/logger"
 )
 
-
-
-func sessionMiddleware(ctx *iris.Context){
+func sessionMiddleware(ctx *iris.Context) {
 	if _, err := ctx.Session().GetInt("id"); err != nil {
 		ctx.JSON(iris.StatusUnauthorized, iris.Map{})
 		return // don't call original handler
@@ -65,7 +63,7 @@ func main() {
 	// user api
 	userApi := app.Party("/api/user", sessionMiddleware)
 	userApi.Handle("GET", "/", &api.CreateUser{api.Common{DB:d}})
-	userApi.Handle("POST" , "/:id", &api.GetUser{api.Common{DB:d}})
+	userApi.Handle("POST", "/:id", &api.GetUser{api.Common{DB:d}})
 	userApi.Handle("GET", "/:id/streams", &api.GetUserStream{api.Common{DB:d}})
 	userApi.Handle("GET", "/:id/streams/current", &api.GetCurrentUserStream{api.Common{DB:d}})
 
@@ -86,11 +84,13 @@ func main() {
 	streamServerApi.Handle("POST", "/", &api.CreateStreamServer{api.Common{DB:d}})
 	streamServerApi.Handle("GET", "/:id", &api.GetStreamServer{api.Common{DB:d}})
 
-
 	streamParty := app.Party("/stream", sessionMiddleware)
 	streamParty.Handle("GET", "/ws/publish/:id", &stream.PublishStream{api.Common{DB:d}})
 	streamParty.Handle("GET", "/ws/subscribe/:id", &stream.WebSocketSubscriber{api.Common{DB:d}})
 	streamParty.Handle("GET", "/http/subscribe/:id", &stream.SubscribeStream{api.Common{DB:d}})
+
+	cricbuzzParty := app.Party("/api/cricbuzz", sessionMiddleware)
+	cricbuzzParty.Handle("GET", "/:id", &api.GetCricketScores{api.Common{DB:d}})
 
 	app.Handle("GET", "/control", &control.Control{})
 
