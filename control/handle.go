@@ -11,7 +11,7 @@ import (
 	"github.com/go-mangos/mangos/protocol/push"
 	"github.com/go-mangos/mangos/transport/tcp"
 	"github.com/go-mangos/mangos/protocol/sub"
-	"strconv"
+	//"strconv"
 )
 
 type Control struct {
@@ -134,23 +134,25 @@ func (c *Control) Serve(ctx *iris.Context) {
 	var err error
 	var wsc *ws.Conn
 
-	var userId int64
+	var userId int
 
 	// validate user session
+	/*
 	userId, err = strconv.ParseInt(ctx.RequestHeader("X-User-Id"), 10, 0)
 	if err != nil {
 		fmt.Println("unable to get user id from header:", err)
 		return
 	}
+	*/
 
-	/*
-	c.userId, err = ctx.Session().GetInt("id")
+	
+	userId, err = ctx.Session().GetInt("id")
 	if err != nil {
 		fmt.Println("unable to get user id:", err)
-		ctx.JSON(iris.StatusBadRequest, &api.Response{Error: "user not authenticated"})
+		//ctx.JSON(iris.StatusBadRequest, &api.Response{Error: "user not authenticated"})
 		return
 	}
-	*/
+	
 
 	// upgrade current control socket get request to websocket
 	wsc, err = upgrader.Upgrade(ctx.ResponseWriter, ctx.Request, ctx.ResponseWriter.Header())
@@ -161,7 +163,7 @@ func (c *Control) Serve(ctx *iris.Context) {
 	// upgrade to websocket end
 
 	// once the upgrade is successful create control context
-	controlContext := &ControlContext{WebSocket:wsc, UserId:int(userId)}
+	controlContext := &ControlContext{WebSocket:wsc, UserId:userId}
 	// initialize close sub channel
 	controlContext.CloseSubSocket = make(chan bool)
 	// initialize loop back channel

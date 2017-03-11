@@ -29,11 +29,11 @@ const (
 func (cs *CreateStream) Serve(ctx *iris.Context) {
 	var stream models.Stream
 
-	err := ctx.ReadJSON(&stream)
-	if err != nil {
-		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
-		return
-	}
+	//err := ctx.ReadJSON(&stream)
+	//if err != nil {
+	//	ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
+	//	return
+	//}
 	event_shortId := ctx.GetString(SHORT_ID)
 	stream.ShortId = getNewShortId()
 	stream.EventId = event_shortId
