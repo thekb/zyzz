@@ -72,7 +72,7 @@ type InningsDetail struct {
 	NoOfOvers          string `xml:"noofovers,attr" json:"noOfOvers"`
 	RequiredRunRate    string `xml:"rrr,attr" json:"RequiredRunRate"`
 	CurrentRunRate     string `xml:"crr,attr" json:"CurrentRunRate"`
-	CurrentPartnership string `xml:"cprtshp.attr" json:"CurrentPartnership"`
+	CurrentPartnership string `xml:"cprtshp,attr" json:"CurrentPartnership"`
 }
 
 type BattingTeam struct {
@@ -102,7 +102,7 @@ type Innings struct {
 type Batsmen struct {
 	XMLName xml.Name `xml:"btsmn" json:"-"`
 	Id      string `xml:"id,attr" json:"-"`
-	SName   string `xml:"sname,attr" json:"SName"`
+	SName   string `xml:"sName,attr" json:"SName"`
 	Runs    string `xml:"r,attr" json:"Runs"`
 	Balls   string `xml:"b,attr" json:"Balls"`
 	Fours   string `xml:"frs,attr" json:"Fours"`
@@ -112,7 +112,7 @@ type Batsmen struct {
 type Bowler struct {
 	XMLName xml.Name `xml:"blrs" json:"-"`
 	Id      string `xml:"id,attr" json:"-"`
-	SName   string `xml:"sname,attr" json:"SNames"`
+	SName   string `xml:"sName,attr" json:"SNames"`
 	Runs    string `xml:"r,attr" json:"Runs"`
 	Wickets string `xml:"b,wkts" json:"Wickets"`
 	Overs   string `xml:"ovrs" json:"Overs"`
