@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	CREATE_EVENT = `INSERT INTO event (name, description, short_id, starttime, endtime, running_now)
-			VALUES (:name, :description, :short_id, :starttime, :endtime, :running_now);`
+	CREATE_EVENT = `INSERT INTO event (name, description, short_id, starttime, endtime, running_now, matchid, matchurl)
+			VALUES (:name, :description, :short_id, :starttime, :endtime, :running_now, :matchid, :matchurl);`
 	UPDATE_EVENT = `UPDATE event set name=:name, description=:description, starttime=:starttime,
-			endtime=:endtime, running_now=:running_now
+			endtime=:endtime, running_now=:running_now, matchid=:matchid, matchurl=:matchurl
 			WHERE event.short_id=:short_id`
 	GET_EVENT_ID = `SELECT E.* FROM event E
 			WHERE E.id=$1;`
@@ -31,6 +31,8 @@ type Event struct {
 	StartTime   time.Time `db:"starttime" json:"starttime"`
 	EndTime     time.Time `db:"endtime" json:"endtime"`
 	RunningNow  int `db:"running_now" json:"running_now"`
+	MatchId     int `db:"matchid" json:"matchid"`
+	MatchUrl    string `db:"matchurl" json:"matchurl"`
 }
 
 
@@ -76,3 +78,4 @@ func GetEvents(d *sqlx.DB) ([]Event, error) {
 	}
 	return events, err
 }
+

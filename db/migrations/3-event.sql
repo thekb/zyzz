@@ -7,7 +7,9 @@ create table event(
     created_at datetime not null default current_timestamp,
     starttime datetime,
     endtime datetime,
-    running_now int
+    running_now int,
+    matchid int,
+    matchurl string
 );
 
 create table stream(
