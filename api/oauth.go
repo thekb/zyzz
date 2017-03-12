@@ -71,6 +71,6 @@ func (fb *FacebookCallback) Serve(ctx *iris.Context) {
 	ctx.Session().Set("id", user_model.Id)
 	ctx.Session().Set("short_id", user_model.ShortId)
 	fmt.Println("Saved user is :", user_model)
-	ctx.Redirect("/")
+	ctx.Redirect("/close")
 	return
 }
