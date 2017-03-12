@@ -158,18 +158,21 @@ GET http://localhost:8000/api/stream/FbOoOTC--/
 
 POST http://localhost:8000/api/event/
 
-{"name":"event 1", "description":"event 1", "running_now": 1}
+{"name":"event 1", "description":"event 1", "running_now":0,"matchid":1027319, "matchurl":"http://synd.cricbuzz.com/j2me/1.0/match/2015/2015_WCLC/NEP_KEN_MAR11/"}
+
 
 {
     "error": "",
     "data": {
-        "name": "stream 1",
+        "name": "event 1",
         "description": "event 1",
-        "id": "wYYkFN1-C",
-        "created_at": "2017-03-01T19:53:56Z",
+        "id": "4UhQn5TCC",
+        "created_at": "2017-03-11T21:09:22Z",
         "starttime": "0001-01-01T00:00:00Z",
         "endtime": "0001-01-01T00:00:00Z",
-        "running_now": 1
+        "running_now": 0,
+        "matchid": 1027319,
+        "matchurl": "http://synd.cricbuzz.com/j2me/1.0/match/2015/2015_WCLC/NEP_KEN_MAR11/"
     }
 }
 
@@ -186,6 +189,89 @@ GET http://localhost:8000/api/event/
         "endtime": "0001-01-01T00:00:00Z",
         "running_now": 1
     }]
+}
+Cricket Store
+GET http://localhost:8000/api/cricbuzz/4UhQn5TCC
+{
+    "error": "",
+    "data": {
+        "MatchInfo": {
+            "Type": "ODI",
+            "Srs": "ICC World Cricket League Championship, 2015-17",
+            "MatchDesc": "NEP vs Ken",
+            "MatchNumber": "33rd Match",
+            "HostCity": "Kirtipur",
+            "HostCountry": "Nepal",
+            "Ground": "Tribhuvan University International Cricket Ground",
+            "DataPath": "http://synd.cricbuzz.com/j2me/1.0/match/2015/2015_WCLC/NEP_KEN_MAR11/",
+            "InngCnt": "",
+            "MatchState": {
+                "MatchState": "complete",
+                "Status": "Ken won by 5 wickets (D/L method)",
+                "TossWon": "Ken",
+                "Decision": "Fielding",
+                "AddnStatus": "",
+                "SplStatus": ""
+            },
+            "Team": [{
+                "Name": "NEP",
+                "SName": "NEP",
+                "Flag": "0"
+            }, {
+                "Name": "Ken",
+                "SName": "KEN",
+                "Flag": "1"
+            }],
+            "Schedule": {
+                "StartTime": "03:45",
+                "EndDate": "Mar 11 2017"
+            },
+            "Score": {
+                "InningsDetail": {
+                    "noOfOvers": "50",
+                    "RequiredRunRate": "0",
+                    "CurrentRunRate": "4.06",
+                    "CurrentPartnership": ""
+                },
+                "BattingTeam": {
+                    "SName": "KEN",
+                    "Innings": [{
+                        "Description": "Inns",
+                        "Runs": "98",
+                        "Declared": "0",
+                        "FollowOn": "0",
+                        "Overs": "24.1",
+                        "Wickets": "5"
+                    }]
+                },
+                "BowlingTeam": {
+                    "SName": "NEP",
+                    "Innings": [{
+                        "Description": "Inns",
+                        "Runs": "112",
+                        "Declared": "0",
+                        "FollowOn": "0",
+                        "Overs": "36",
+                        "Wickets": "8"
+                    }]
+                },
+                "Batsmen": {
+                    "SName": "",
+                    "Runs": "12",
+                    "Balls": "19",
+                    "Fours": "1",
+                    "Sixes": "0"
+                },
+                "Bowler": {
+                    "SNames": "",
+                    "Runs": "8",
+                    "Wickets": "",
+                    "Overs": "",
+                    "Maidens": ""
+                }
+            }
+        }
+    }
 }
 
 ```
