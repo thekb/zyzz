@@ -171,15 +171,23 @@ func (gcs *GetCricketScores) Serve(ctx *iris.Context) {
 func scoreTicker(close_chan chan bool, ticker <- chan time.Time, eventId string, DataPath string) {
 	//cric_url := "http://synd.cricbuzz.com/j2me/1.0/livematches.xml"
 	cric_url := fmt.Sprintf("%s%s", DataPath, "commentary.xml")
+	r := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:      0, // use default DB
+	})
+	_, err := r.Ping().Result()
+	if err != nil {
+		fmt.Println("No redis connection found")
+	}
 	ForLoop:
 	for {
 		select {
+		case <-close_chan:
+			fmt.Println("i am in case close chan")
+			break ForLoop
 		case <-ticker:
-		//data := url.Values{}
-		//data.Set("apikey", "bRGI79IqC3S5fh52QlsgxNnJbu72")
-		//data.Add("unique_id", strconv.Itoa(matchId))
 			req, _ := http.NewRequest("GET", cric_url, bytes.NewBufferString(""))
-		//req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
@@ -188,30 +196,20 @@ func scoreTicker(close_chan chan bool, ticker <- chan time.Time, eventId string,
 			}
 			defer resp.Body.Close()
 			status := resp.StatusCode
-		//var eventScore EventScore
 			if status == 200 {
-				//body, err := ioutil.ReadAll(resp.Body)
 				MatchDetails, err := ReadMatchData(resp.Body)
 				match, err := json.Marshal(MatchDetails)
 				if err == nil {
-					r := redis.NewClient(&redis.Options{
-						Addr:     "localhost:6379",
-						Password: "", // no password set
-						DB:      0, // use default DB
-					})
-					pong, err := r.Ping().Result()
-					fmt.Println(pong, err)
+
 					err = r.Set(eventId, match, 0).Err()
 					if err != nil {
 						fmt.Println("Error occured while setting in redis", err)
 					}
-					r.Close()
 				}
 			}
-		case <-close_chan:
-			break ForLoop
 		default:
 			continue
 		}
 	}
+	r.Close()
 }
