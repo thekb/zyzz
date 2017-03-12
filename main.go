@@ -45,6 +45,22 @@ func main() {
 	app.Adapt(httprouter.New())
 	app.Adapt(mySessions)
 
+	/*
+	app.StaticWeb("/css","/Users/abalusu/Projects/shortpitch/dist/css")
+	app.StaticWeb("/js","/Users/abalusu/Projects/shortpitch/dist/js")
+	app.StaticWeb("/assets","/Users/abalusu/Projects/shortpitch/dist/assets")
+	app.StaticWeb("/vendor","/Users/abalusu/Projects/shortpitch/dist/vendor")
+	app.StaticWeb("/jspm_packages","/Users/abalusu/Projects/shortpitch/dist/jspm_packages")
+	app.StaticWeb("/home","/Users/abalusu/Projects/shortpitch/dist/")
+	app.HandleFunc("GET", "/", func(ctx *iris.Context) { ctx.Redirect("/home", 302) })
+	*/
+	app.StaticWeb("/css","/opt/shortpitch/UI/dist/css")
+	app.StaticWeb("/js","/opt/shortpitch/UI/dist/js")
+	app.StaticWeb("/assets","/opt/shortpitch/UI/dist/assets")
+	app.StaticWeb("/vendor","/opt/shortpitch/UI/dist/vendor")
+	app.StaticWeb("/jspm_packages","/opt/shortpitch/UI/dist/jspm_packages")
+	app.StaticWeb("/home","/opt/shortpitch/UI/dist/")
+	app.HandleFunc("GET", "/", func(ctx *iris.Context) { ctx.Redirect("/home", 302) })
 	customLogger := logger.New(logger.Config{
 		// Status displays status code
 		Status: true,
