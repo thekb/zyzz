@@ -108,7 +108,7 @@ func main() {
 	cricbuzzParty := app.Party("/api/cricbuzz", sessionMiddleware)
 	cricbuzzParty.Handle("GET", "/:id", &api.GetCricketScores{api.Common{DB:d}})
 
-	app.Handle("GET", "/control", &control.Control{})
+	app.Handle("GET", "/control", &control.Control{DB:d})
 
 	app.Listen(":8000")
 

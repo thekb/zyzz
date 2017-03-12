@@ -5,16 +5,19 @@ import (
 	ws "github.com/gorilla/websocket"
 	"net/http"
 	"fmt"
-	"github.com/thekb/zyzz/message"
+	m "github.com/thekb/zyzz/message"
 	fb "github.com/google/flatbuffers/go"
 	"github.com/go-mangos/mangos"
 	"github.com/go-mangos/mangos/protocol/push"
 	"github.com/go-mangos/mangos/transport/tcp"
 	"github.com/go-mangos/mangos/protocol/sub"
-	//"strconv"
+	"github.com/jmoiron/sqlx"
+	"time"
+	"github.com/thekb/zyzz/db/models"
 )
 
 type Control struct {
+	DB *sqlx.DB
 }
 
 type ControlContext struct {
@@ -28,6 +31,7 @@ type ControlContext struct {
 	SubSocket mangos.Socket // socket for subscribing messages
 	CloseSubSocket chan bool // channel for closing sub socket
 	StreamStarted bool // if stream is active on current control context
+	Builder *fb.Builder
 }
 
 // setup new push socket for current stream
@@ -106,7 +110,8 @@ func (ctx *ControlContext) CopyToWS() {
 				fmt.Println("unable to receive from sub socket:", err)
 				continue
 			}
-			err = ctx.WebSocket.WriteMessage(ws.BinaryMessage, out)
+			// first 2 bytes contain topic and delimiter
+			err = ctx.WebSocket.WriteMessage(ws.BinaryMessage, out[2:])
 			if err != nil {
 				if ws.IsCloseError(err) || ws.IsUnexpectedCloseError(err) {
 					fmt.Println("websocket connection closed:", err)
@@ -145,13 +150,15 @@ func (c *Control) Serve(ctx *iris.Context) {
 	}
 	*/
 
-	
+
+
 	userId, err = ctx.Session().GetInt("id")
 	if err != nil {
 		fmt.Println("unable to get user id:", err)
 		//ctx.JSON(iris.StatusBadRequest, &api.Response{Error: "user not authenticated"})
 		return
 	}
+
 	
 
 	// upgrade current control socket get request to websocket
@@ -163,12 +170,13 @@ func (c *Control) Serve(ctx *iris.Context) {
 	// upgrade to websocket end
 
 	// once the upgrade is successful create control context
-	controlContext := &ControlContext{WebSocket:wsc, UserId:userId}
-	// initialize close sub channel
-	controlContext.CloseSubSocket = make(chan bool)
-	// initialize loop back channel
-	controlContext.Loopback = make(chan []byte)
-
+	controlContext := &ControlContext{
+		WebSocket:wsc,
+		UserId:userId,
+		Builder: fb.NewBuilder(0),
+		CloseSubSocket: make(chan bool),
+		Loopback: make(chan []byte),
+	}
 
 	var in []byte
 	var copy bool
@@ -188,9 +196,8 @@ func (c *Control) Serve(ctx *iris.Context) {
 			continue
 		}
 
-		header, copy = controlContext.HandleStreamMessage(in)
+		header, copy = controlContext.HandleStreamMessage(c.DB, in)
 
-		fmt.Println("copy:", copy)
 		if copy {
 			var msg []byte
 			msg = append(msg, header...)
@@ -214,48 +221,62 @@ func (ctx *ControlContext) UserAllowedToPublish() bool {
 	return true
 }
 
-func GetStreamErrorMessage(err error) []byte {
-	builder := fb.NewBuilder(0)
-	message.StreamResponseStart(builder)
+func (ctx *ControlContext) GetStreamResponse(streamId, eventId string, err error) []byte {
+	ctx.Builder.Reset()
+
+	m.StreamResponseStart(ctx.Builder)
 
 	switch err {
 	case nil:
-		message.StreamResponseAddStatus(builder, message.StatusOK)
+		m.StreamResponseAddStatus(ctx.Builder, m.StatusOK)
 	case STREAM_NOT_FOUND:
-		message.StreamResponseAddStatus(builder, message.StatusNoStream)
+		m.StreamResponseAddStatus(ctx.Builder, m.StatusNoStream)
 	case STREAM_NOT_ALLOWED:
-		message.StreamResponseAddStatus(builder, message.StatusNotAllowed)
+		m.StreamResponseAddStatus(ctx.Builder, m.StatusNotAllowed)
 	default:
-		message.StreamResponseAddStatus(builder, message.StatusError)
+		m.StreamResponseAddStatus(ctx.Builder, m.StatusError)
 	}
 
-	responseOffset := message.StreamResponseEnd(builder)
-	builder.Finish(responseOffset)
-	return builder.FinishedBytes()
+	responseOffset := m.StreamResponseEnd(ctx.Builder)
+
+	streamIdOffset := ctx.Builder.CreateString(streamId)
+	eventIdOffset := ctx.Builder.CreateString(eventId)
+
+	m.StreamMessageStart(ctx.Builder)
+	m.StreamMessageAddEventId(ctx.Builder, eventIdOffset)
+	m.StreamMessageAddStreamId(ctx.Builder, streamIdOffset)
+	m.StreamMessageAddMessageType(ctx.Builder, m.MessageStreamResponse)
+	m.StreamMessageAddMessage(ctx.Builder, responseOffset)
+	m.StreamMessageAddTimestamp(ctx.Builder, GetTimeInMillis())
+	streamMessageOffset := m.StreamMessageEnd(ctx.Builder)
+
+	ctx.Builder.Finish(streamMessageOffset)
+	return ctx.Builder.FinishedBytes()
 }
 
 
 // send error message to client
-func (ctx *ControlContext) SendErrorMessage(err error) {
+func (ctx *ControlContext) SendErrorMessage(streamId, eventId string, err error) {
 	// if stream has already started send in loopback channel
 	if ctx.StreamStarted {
-		ctx.Loopback <- GetStreamErrorMessage(err)
+		ctx.Loopback <- ctx.GetStreamResponse(streamId, eventId, err)
 	} else {
-		ctx.WebSocket.WriteMessage(ws.BinaryMessage, GetStreamErrorMessage(err))
+		ctx.WebSocket.WriteMessage(ws.BinaryMessage, ctx.GetStreamResponse(streamId, eventId, err))
 	}
 }
 
 // return topic, true if message should be copied to push socket
-func (ctx *ControlContext) HandleStreamMessage(msg []byte) ([]byte, bool) {
+func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB ,msg []byte) ([]byte, bool) {
 	var err error
 	var stream *Stream
-	streamMessage := message.GetRootAsStreamMessage(msg, 0)
+	streamMessage := m.GetRootAsStreamMessage(msg, 0)
 	streamId := string(streamMessage.StreamId())
+	eventId := string(streamMessage.EventId())
 
 	stream, err = GetStream(streamId)
 	if err != nil {
 		fmt.Println("unable to get stream:", err)
-		ctx.SendErrorMessage(err)
+		ctx.SendErrorMessage(streamId, eventId, err)
 		return nil, false
 
 	}
@@ -263,7 +284,7 @@ func (ctx *ControlContext) HandleStreamMessage(msg []byte) ([]byte, bool) {
 	fmt.Println("message lag:", GetCurrentTimeInMilli() - streamMessage.Timestamp())
 
 	switch streamMessage.MessageType() {
-	case message.MessageStreamBroadCast:
+	case m.MessageStreamBroadCast:
 		fmt.Println("handling stream broadcast")
 		// if user is allowed to broadcast on this stream
 		if ctx.CurrentStream == nil || (ctx.CurrentStream != stream && ctx.UserAllowedToPublish()) {
@@ -276,14 +297,14 @@ func (ctx *ControlContext) HandleStreamMessage(msg []byte) ([]byte, bool) {
 			if err != nil {
 				fmt.Println("unable to setup push socket:", err)
 				// send to loopback if stream has started
-				ctx.SendErrorMessage(err)
+				ctx.SendErrorMessage(streamId, eventId, err)
 
 			}
 
 			err = ctx.SetupSubSocket()
 			if err != nil {
 				fmt.Println("unable to setup sub socket:", err)
-				ctx.SendErrorMessage(err)
+				ctx.SendErrorMessage(streamId, eventId, err)
 			}
 			if ctx.StreamStarted {
 				// close existing sub socket
@@ -291,26 +312,28 @@ func (ctx *ControlContext) HandleStreamMessage(msg []byte) ([]byte, bool) {
 			}
 			// start background write subscribe socket to web socket
 			ctx.StreamStarted = true
+			models.SetStreamStatus(db, streamId, models.STATUS_STREAMING)
 			go ctx.CopyToWS()
 			// send ok back
-			ctx.SendErrorMessage(nil)
+			ctx.SendErrorMessage(streamId, eventId, nil)
 		} else {
 			fmt.Println("user not allowed to broadcast")
-			ctx.SendErrorMessage(err)
+			ctx.SendErrorMessage(streamId, eventId, err)
 
 		}
 		//TODO what to do with duplicate broadcast messages ?
 		return nil, false
-	case message.MessageStreamPause:
+	case m.MessageStreamPause:
 		fmt.Println("handling stream pause")
 		return []byte("p|"), true
-	case message.MessageStreamStop:
+	case m.MessageStreamStop:
 		fmt.Println("handling stream stop")
+		models.SetStreamStatus(db, streamId, models.STATUS_STOPPED)
 		return []byte("s|"), true
-	case message.MessageStreamFrame:
+	case m.MessageStreamFrame:
 		fmt.Println("handling stream frame")
 		return []byte("f|"), true
-	case message.MessageStreamSubscribe:
+	case m.MessageStreamSubscribe:
 		if ctx.CurrentStream != stream {
 			ctx.CurrentStream = stream
 			ctx.Publish = false
@@ -318,13 +341,13 @@ func (ctx *ControlContext) HandleStreamMessage(msg []byte) ([]byte, bool) {
 			err = ctx.SetupPushSocket()
 			if err != nil {
 				fmt.Println("unable to setup push socket:", err)
-				ctx.SendErrorMessage(err)
+				ctx.SendErrorMessage(streamId, eventId, err)
 			}
 
 			err = ctx.SetupSubSocket()
 			if err != nil {
 				fmt.Println("unable to setup sub socket:", err)
-				ctx.SendErrorMessage(err)
+				ctx.SendErrorMessage(streamId, eventId, err)
 			}
 
 			if ctx.StreamStarted {
@@ -332,14 +355,17 @@ func (ctx *ControlContext) HandleStreamMessage(msg []byte) ([]byte, bool) {
 				ctx.CloseSubSocket <- true
 
 			}
+			models.IncrementStreamSubscriberCount(db, streamId)
 			go ctx.CopyToWS()
 		}
 		return nil, false
-	case message.MessageStreamComment:
+	case m.MessageStreamComment:
 		fmt.Println("handling stream comment")
 		return []byte("c|"), true
 	}
 	return nil, false
 }
 
-
+func GetTimeInMillis() int64 {
+	 return time.Now().UnixNano() / int64(time.Millisecond)
+}

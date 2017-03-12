@@ -24,7 +24,7 @@ const (
 func main() {
 	var err error
 	var wsRead []byte
-	streamId := "uuZnyh5CC"
+	streamId := "pjxiezxCC"
 	eventId := "pfYX3Z1C-"
 	b := fb.NewBuilder(1024)
 	pa.Initialize()
@@ -58,12 +58,22 @@ func main() {
 		return
 	}
 
-	streamResponse := m.GetRootAsStreamResponse(wsRead, 0)
-	fmt.Println("stream response status:", streamResponse.Status())
-	if streamResponse.Status() != m.StatusOK {
-		c.Close()
-		return
+	streamMessage := m.GetRootAsStreamMessage(wsRead, 0)
+	fmt.Println("stream mesage type:", streamMessage.MessageType())
+	table := new(fb.Table)
+	if streamMessage.Message(table) {
+		if streamMessage.MessageType() == m.MessageStreamResponse {
+			response := new(m.StreamResponse)
+			response.Init(table.Bytes, table.Pos)
+			if response.Status() != m.StatusOK {
+				fmt.Println("status not ok,", response.Status())
+				c.Close()
+				return
+			}
+
+		}
 	}
+
 	// read messages in background
 	go func(c *ws.Conn){
 		for {
@@ -72,7 +82,7 @@ func main() {
 				fmt.Println("unable to read message from websocket:", err)
 				break
 			}
-			message := m.GetRootAsStreamMessage(out, 2)
+			message := m.GetRootAsStreamMessage(out, 0)
 			table := new(fb.Table)
 			fmt.Println(string(message.StreamId()))
 			fmt.Println(message.MessageType())
@@ -96,7 +106,7 @@ func main() {
 	encoder, err = opus.NewEncoder(SAMPLE_RATE, INPUT_CHANNELS, opus.AppAudio)
 
 	fmt.Println("sending stream")
-	timeout := time.After(time.Second * 60)
+	timeout := time.After(time.Millisecond * 100)
 	ticker := time.Tick(time.Millisecond * FRAMES_SIZE)
 
 	L:
