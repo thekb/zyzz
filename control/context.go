@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/thekb/zyzz/db/models"
-	"time"
 )
 
 var (
@@ -330,14 +329,10 @@ func (ctx *ControlContext) getStreamStatus(db *sqlx.DB, eventId, streamId string
 	m.StreamMessageAddStreamId(ctx.builder, streamIdOffset)
 	m.StreamMessageAddMessageType(ctx.builder, m.MessageStreamStatus)
 	m.StreamMessageAddMessage(ctx.builder, statusOffset)
-	m.StreamMessageAddTimestamp(ctx.builder, GetTimeInMillis())
+	m.StreamMessageAddTimestamp(ctx.builder, GetCurrentTimeInMilli())
 	streamMessageOffset := m.StreamMessageEnd(ctx.builder)
 	ctx.builder.Finish(streamMessageOffset)
 	return ctx.builder.FinishedBytes()
 }
 
-
-func GetTimeInMillis() int64 {
-	 return time.Now().UnixNano() / int64(time.Millisecond)
-}
 
