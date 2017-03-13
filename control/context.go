@@ -177,7 +177,7 @@ func (ctx *ControlContext) getStreamResponse(streamId, eventId string, err error
 	m.StreamMessageAddStreamId(ctx.builder, streamIdOffset)
 	m.StreamMessageAddMessageType(ctx.builder, m.MessageStreamResponse)
 	m.StreamMessageAddMessage(ctx.builder, responseOffset)
-	m.StreamMessageAddTimestamp(ctx.builder, GetTimeInMillis())
+	m.StreamMessageAddTimestamp(ctx.builder, GetCurrentTimeInMilli())
 	streamMessageOffset := m.StreamMessageEnd(ctx.builder)
 
 	ctx.builder.Finish(streamMessageOffset)
