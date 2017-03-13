@@ -1,26 +1,26 @@
 package control
 
 import (
-	m "github.com/thekb/zyzz/message"
-	ws "github.com/gorilla/websocket"
+	"fmt"
+
 	"github.com/go-mangos/mangos"
 	"github.com/go-mangos/mangos/protocol/push"
-	"github.com/go-mangos/mangos/transport/tcp"
 	"github.com/go-mangos/mangos/protocol/sub"
+	"github.com/go-mangos/mangos/transport/tcp"
 	fb "github.com/google/flatbuffers/go"
-	"fmt"
+	ws "github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"github.com/thekb/zyzz/db/models"
+	m "github.com/thekb/zyzz/message"
 )
 
 var (
-	PauseHeader = []byte("p|")
-	FrameHeader = []byte("f|")
-	StopHeader = []byte("s|")
+	PauseHeader   = []byte("p|")
+	FrameHeader   = []byte("f|")
+	StopHeader    = []byte("s|")
 	CommentHeader = []byte("c|")
-
-
 )
+
 type ControlContext struct {
 	WebSocket      *ws.Conn      // pointer to control websocket connection
 	currentStream  *Stream       // pointer to current stream
@@ -48,7 +48,7 @@ func (ctx *ControlContext) Init(conn *ws.Conn, userId int) {
 	ctx.UserId = userId
 	ctx.builder = fb.NewBuilder(0)
 	ctx.closeSubSocket = make(chan bool)
-	ctx.loopBack =  make(chan []byte)
+	ctx.loopBack = make(chan []byte)
 }
 
 // setup new push socket for current stream
@@ -105,13 +105,13 @@ func (ctx *ControlContext) CopyToWS() {
 	var out []byte
 	var err error
 	defer ctx.subSocket.Close()
-	COPY:
+COPY:
 	for {
 		select {
 		// close go routine
-		case <- ctx.closeSubSocket:
+		case <-ctx.closeSubSocket:
 			break
-		case out = <- ctx.loopBack:
+		case out = <-ctx.loopBack:
 			err = ctx.WebSocket.WriteMessage(ws.BinaryMessage, out)
 			if err != nil {
 				if ws.IsCloseError(err) || ws.IsUnexpectedCloseError(err) {
@@ -205,7 +205,7 @@ func (ctx *ControlContext) sendMessageToClient(msg []byte) {
 }
 
 // return topic, true if message should be copied to push socket
-func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte){
+func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 	var err error
 	var stream *Stream
 	streamMessage := m.GetRootAsStreamMessage(msg, 0)
@@ -219,7 +219,7 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte){
 
 	}
 
-	fmt.Println("message lag:", GetCurrentTimeInMilli() - streamMessage.Timestamp())
+	// fmt.Println("message lag:", GetCurrentTimeInMilli()-streamMessage.Timestamp())
 
 	switch streamMessage.MessageType() {
 	case m.MessageStreamBroadCast:
@@ -268,9 +268,10 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte){
 		models.SetStreamStatus(db, streamId, models.STATUS_STOPPED)
 		ctx.pushMessage(StopHeader, msg)
 	case m.MessageStreamFrame:
-		fmt.Println("handling stream frame")
+		// fmt.Println("handling stream frame")
 		ctx.pushMessage(FrameHeader, msg)
 	case m.MessageStreamSubscribe:
+		fmt.Println("handling stream subscribe")
 		if ctx.currentStream == nil || ctx.currentStream != stream {
 			ctx.currentStream = stream
 			ctx.publish = false
@@ -294,8 +295,9 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte){
 			}
 			models.IncrementStreamSubscriberCount(db, streamId)
 			ctx.streamStarted = true
-			ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
+			// ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
 			go ctx.CopyToWS()
+			ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, nil))
 		}
 	case m.MessageStreamUnSubscribe:
 		fmt.Println("handling unsubscribe")
@@ -334,5 +336,3 @@ func (ctx *ControlContext) getStreamStatus(db *sqlx.DB, eventId, streamId string
 	ctx.builder.Finish(streamMessageOffset)
 	return ctx.builder.FinishedBytes()
 }
-
-

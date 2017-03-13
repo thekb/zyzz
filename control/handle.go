@@ -1,18 +1,17 @@
 package control
 
 import (
-	"gopkg.in/kataras/iris.v6"
-	ws "github.com/gorilla/websocket"
-	"net/http"
 	"fmt"
+	"net/http"
+
+	ws "github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
+	"gopkg.in/kataras/iris.v6"
 )
 
 type Control struct {
 	DB *sqlx.DB
 }
-
-
 
 var upgrader = ws.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -27,18 +26,16 @@ func (c *Control) GetUserId(ctx *iris.Context) (int, error) {
 
 	// validate user session
 	/*
-	userId, err = strconv.ParseInt(ctx.RequestHeader("X-User-Id"), 10, 0)
-	if err != nil {
-		fmt.Println("unable to get user id from header:", err)
-		return
-	}
+		userId, err = strconv.ParseInt(ctx.RequestHeader("X-User-Id"), 10, 0)
+		if err != nil {
+			fmt.Println("unable to get user id from header:", err)
+			return
+		}
 	*/
-
 
 	userId, err = ctx.Session().GetInt("id")
 	return userId, err
 }
-
 
 func (c *Control) Serve(ctx *iris.Context) {
 	// verify if user is authenticated etc etc
@@ -48,7 +45,7 @@ func (c *Control) Serve(ctx *iris.Context) {
 	// upgrade current control socket get request to websocket
 	wsc, err = upgrader.Upgrade(ctx.ResponseWriter, ctx.Request, ctx.ResponseWriter.Header())
 	if err != nil {
-		ctx.JSON(iris.StatusBadRequest, map[string]string{"Error":err.Error()})
+		ctx.JSON(iris.StatusBadRequest, map[string]string{"Error": err.Error()})
 		return
 	}
 	// upgrade to websocket end
@@ -65,9 +62,9 @@ func (c *Control) Serve(ctx *iris.Context) {
 	var in []byte
 	// read from websocket and push to stream
 	for {
-		fmt.Println("reading message")
+		// fmt.Println("reading message")
 		_, in, err = wsc.ReadMessage()
-		if err != nil  {
+		if err != nil {
 			// if websocket connection is closed break out of the read loop
 			if ws.IsUnexpectedCloseError(err) || ws.IsCloseError(err) {
 				fmt.Println("websocket closed:", err)
@@ -81,9 +78,4 @@ func (c *Control) Serve(ctx *iris.Context) {
 		controlContext.HandleStreamMessage(c.DB, in)
 	}
 
-
 }
-
-
-
-
