@@ -11,6 +11,8 @@ const (
 	MessageStreamComment = 5
 	MessageStreamSubscribe = 6
 	MessageStreamResponse = 7
+	MessageStreamStatus = 8
+	MessageStreamUnSubscribe = 9
 )
 
 var EnumNamesMessage = map[int]string{
@@ -22,5 +24,7 @@ var EnumNamesMessage = map[int]string{
 	MessageStreamComment:"StreamComment",
 	MessageStreamSubscribe:"StreamSubscribe",
 	MessageStreamResponse:"StreamResponse",
+	MessageStreamStatus:"StreamStatus",
+	MessageStreamUnSubscribe:"StreamUnSubscribe",
 }
 

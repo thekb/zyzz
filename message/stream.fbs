@@ -1,10 +1,18 @@
 namespace message;
 
 enum InputEncoding : byte {Opus = 1, PCM, AAC}
-enum Status : byte {OK = 1, NoStream, NotAllowed, Error}
+enum ResponseStatus : byte {OK = 1, NoStream, NotAllowed, Error}
+enum StreamStatus : byte {CREATED = 0, STREAMING, STOPPED, ERROR}
 
 table StreamSubscribe {
+    status:StreamStatus = CREATED;
+}
 
+table StreamUnSubscribe {
+}
+
+table StreamStatus {
+    status:StreamStatus = CREATED;
 }
 
 table StreamBroadCast {
@@ -32,11 +40,21 @@ table StreamComment {
 }
 
 table StreamResponse {
-    status:Status = OK;
+    status:ResponseStatus = OK;
 }
 
 
-union Message {StreamBroadCast, StreamPause, StreamStop, StreamFrame, StreamComment, StreamSubscribe, StreamResponse}
+union Message {
+    StreamBroadCast,
+    StreamPause,
+    StreamStop,
+    StreamFrame,
+    StreamComment,
+    StreamSubscribe,
+    StreamResponse,
+    StreamStatus,
+    StreamUnSubscribe
+}
 
 table StreamMessage {
     event_id:string;
