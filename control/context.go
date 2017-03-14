@@ -12,6 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/thekb/zyzz/db/models"
 	m "github.com/thekb/zyzz/message"
+	"time"
 )
 
 var (
@@ -48,7 +49,7 @@ func (ctx *ControlContext) Init(conn *ws.Conn, userId int) {
 	ctx.UserId = userId
 	ctx.builder = fb.NewBuilder(0)
 	ctx.closeSubSocket = make(chan bool)
-	ctx.loopBack = make(chan []byte)
+	ctx.loopBack = make(chan []byte, 1)
 }
 
 // setup new push socket for current stream
@@ -81,6 +82,11 @@ func (ctx *ControlContext) SetupSubSocket() error {
 		fmt.Println("unable to dial to sub socket:", err)
 		return err
 	}
+	// set receive deadline to 50 ms
+	err = ctx.subSocket.SetOption(mangos.OptionRecvDeadline, time.Millisecond * 50)
+	if err != nil {
+		fmt.Println("unable to set recv deadline:", err)
+	}
 	if ctx.publish {
 		// publisher will subscribe to only stream comments
 		err = ctx.subSocket.SetOption(mangos.OptionSubscribe, []byte("c"))
@@ -105,14 +111,18 @@ func (ctx *ControlContext) CopyToWS() {
 	var out []byte
 	var err error
 	defer ctx.subSocket.Close()
-COPY:
+
+	COPY:
 	for {
 		select {
 		// close go routine
-		case <-ctx.closeSubSocket:
-			break
-		case out = <-ctx.loopBack:
+		case <- ctx.closeSubSocket:
+			fmt.Println("received close to copy")
+			break COPY
+		case out = <- ctx.loopBack:
+			fmt.Println("received message in loopback", out)
 			err = ctx.WebSocket.WriteMessage(ws.BinaryMessage, out)
+			fmt.Println("sent loopback message on websocket")
 			if err != nil {
 				if ws.IsCloseError(err) || ws.IsUnexpectedCloseError(err) {
 					fmt.Println("websocket connection closed:", err)
@@ -124,7 +134,7 @@ COPY:
 		default:
 			out, err = ctx.subSocket.Recv()
 			if err != nil {
-				fmt.Println("unable to receive from sub socket:", err)
+				//fmt.Println("unable to receive from sub socket:", err)
 				continue
 			}
 			// first 2 bytes contain topic and delimiter
@@ -154,20 +164,20 @@ func (ctx *ControlContext) UserAllowedToPublish() bool {
 func (ctx *ControlContext) getStreamResponse(streamId, eventId string, err error) []byte {
 	ctx.builder.Reset()
 
-	m.StreamResponseStart(ctx.builder)
+	m.ResponseStart(ctx.builder)
 
 	switch err {
 	case nil:
-		m.StreamResponseAddStatus(ctx.builder, m.ResponseStatusOK)
+		m.ResponseAddStatus(ctx.builder, m.ResponseStatusOK)
 	case STREAM_NOT_FOUND:
-		m.StreamResponseAddStatus(ctx.builder, m.ResponseStatusNoStream)
+		m.ResponseAddStatus(ctx.builder, m.ResponseStatusNoStream)
 	case STREAM_NOT_ALLOWED:
-		m.StreamResponseAddStatus(ctx.builder, m.ResponseStatusNotAllowed)
+		m.ResponseAddStatus(ctx.builder, m.ResponseStatusNotAllowed)
 	default:
-		m.StreamResponseAddStatus(ctx.builder, m.ResponseStatusOK)
+		m.ResponseAddStatus(ctx.builder, m.ResponseStatusOK)
 	}
 
-	responseOffset := m.StreamResponseEnd(ctx.builder)
+	responseOffset := m.ResponseEnd(ctx.builder)
 
 	streamIdOffset := ctx.builder.CreateString(streamId)
 	eventIdOffset := ctx.builder.CreateString(eventId)
@@ -175,7 +185,7 @@ func (ctx *ControlContext) getStreamResponse(streamId, eventId string, err error
 	m.StreamMessageStart(ctx.builder)
 	m.StreamMessageAddEventId(ctx.builder, eventIdOffset)
 	m.StreamMessageAddStreamId(ctx.builder, streamIdOffset)
-	m.StreamMessageAddMessageType(ctx.builder, m.MessageStreamResponse)
+	m.StreamMessageAddMessageType(ctx.builder, m.MessageResponse)
 	m.StreamMessageAddMessage(ctx.builder, responseOffset)
 	m.StreamMessageAddTimestamp(ctx.builder, GetCurrentTimeInMilli())
 	streamMessageOffset := m.StreamMessageEnd(ctx.builder)
@@ -219,10 +229,10 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 
 	}
 
-	// fmt.Println("message lag:", GetCurrentTimeInMilli()-streamMessage.Timestamp())
+	//fmt.Println("message lag:", GetCurrentTimeInMilli()-streamMessage.Timestamp())
 
 	switch streamMessage.MessageType() {
-	case m.MessageStreamBroadCast:
+	case m.MessageBroadCast:
 		fmt.Println("handling stream broadcast")
 		// if user is allowed to broadcast on this stream
 		if ctx.currentStream == nil || (ctx.currentStream != stream && ctx.UserAllowedToPublish()) {
@@ -260,19 +270,26 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 
 		}
 		//TODO what to do with duplicate broadcast messages ?
-	case m.MessageStreamPause:
+	case m.MessagePause:
 		fmt.Println("handling stream pause")
-		ctx.pushMessage(PauseHeader, msg)
-	case m.MessageStreamStop:
+		if ctx.streamStarted {
+			ctx.pushMessage(PauseHeader, msg)
+		}
+	case m.MessageStop:
 		fmt.Println("handling stream stop")
-		models.SetStreamStatus(db, streamId, models.STATUS_STOPPED)
-		ctx.pushMessage(StopHeader, msg)
-	case m.MessageStreamFrame:
-		// fmt.Println("handling stream frame")
-		ctx.pushMessage(FrameHeader, msg)
-	case m.MessageStreamSubscribe:
+		if ctx.streamStarted {
+			models.SetStreamStatus(db, streamId, models.STATUS_STOPPED)
+			ctx.pushMessage(StopHeader, msg)
+		}
+	case m.MessageFrame:
+		fmt.Println("handling stream frame")
+		if ctx.streamStarted {
+			ctx.pushMessage(FrameHeader, msg)
+		}
+	case m.MessageSubscribe:
 		fmt.Println("handling stream subscribe")
 		if ctx.currentStream == nil || ctx.currentStream != stream {
+			fmt.Println("stream nil or different")
 			ctx.currentStream = stream
 			ctx.publish = false
 			// setup push socket
@@ -281,32 +298,39 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 				fmt.Println("unable to setup push socket:", err)
 				ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, err))
 			}
-
+			fmt.Println("push socket setup successfully")
 			err = ctx.SetupSubSocket()
 			if err != nil {
 				fmt.Println("unable to setup sub socket:", err)
 				ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, err))
 			}
-
+			fmt.Println("sub socket setup successfully")
 			if ctx.streamStarted {
 				// close existing sub socket
+				fmt.Println("stream already started, closing exising sub socket")
 				ctx.closeSubSocket <- true
 
 			}
 			models.IncrementStreamSubscriberCount(db, streamId)
+			fmt.Println("incremented subscriber count")
 			ctx.streamStarted = true
-			// ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
 			go ctx.CopyToWS()
+			fmt.Println("started copy to ws goroutine")
 			ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, nil))
+			ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
+			fmt.Println("sent status to client")
 		}
-	case m.MessageStreamUnSubscribe:
+	case m.MessageUnSubscribe:
 		fmt.Println("handling unsubscribe")
 		ctx.currentStream = nil
 		ctx.streamStarted = false
 		ctx.closeSubSocket <- true
-	case m.MessageStreamComment:
+	case m.MessageComment:
 		fmt.Println("handling stream comment")
-		ctx.pushMessage(CommentHeader, msg)
+		if ctx.streamStarted {
+			ctx.pushMessage(CommentHeader, msg)
+		}
+
 	}
 }
 
@@ -322,14 +346,14 @@ func (ctx *ControlContext) getStreamStatus(db *sqlx.DB, eventId, streamId string
 	eventIdOffset := ctx.builder.CreateString(eventId)
 	streamIdOffset := ctx.builder.CreateString(streamId)
 
-	m.StreamStatusStart(ctx.builder)
-	m.StreamStatusAddStatus(ctx.builder, int8(stream.Status))
-	statusOffset := m.StreamStatusEnd(ctx.builder)
+	m.StatusStart(ctx.builder)
+	m.StatusAddStatus(ctx.builder, int8(stream.Status))
+	statusOffset := m.StatusEnd(ctx.builder)
 
 	m.StreamMessageStart(ctx.builder)
 	m.StreamMessageAddEventId(ctx.builder, eventIdOffset)
 	m.StreamMessageAddStreamId(ctx.builder, streamIdOffset)
-	m.StreamMessageAddMessageType(ctx.builder, m.MessageStreamStatus)
+	m.StreamMessageAddMessageType(ctx.builder, m.MessageStatus)
 	m.StreamMessageAddMessage(ctx.builder, statusOffset)
 	m.StreamMessageAddTimestamp(ctx.builder, GetCurrentTimeInMilli())
 	streamMessageOffset := m.StreamMessageEnd(ctx.builder)

@@ -4,56 +4,56 @@ enum InputEncoding : byte {Opus = 1, PCM, AAC}
 enum ResponseStatus : byte {OK = 1, NoStream, NotAllowed, Error}
 enum StreamStatus : byte {CREATED = 0, STREAMING, STOPPED, ERROR}
 
-table StreamSubscribe {
+table Subscribe {
     status:StreamStatus = CREATED;
 }
 
-table StreamUnSubscribe {
+table UnSubscribe {
 }
 
-table StreamStatus {
+table Status {
     status:StreamStatus = CREATED;
 }
 
-table StreamBroadCast {
+table BroadCast {
     encoding:InputEncoding = Opus;
 }
 
-table StreamPause {
+table Pause {
 
 }
 
-table StreamStop {
+table Stop {
 
 }
 
-table StreamFrame {
+table Frame {
     frame_size:ubyte;
     sample_rate:uint;
     channels:ubyte;
     frame:[ubyte];
 }
 
-table StreamComment {
+table Comment {
     user_name:string;
     text:string;
 }
 
-table StreamResponse {
+table Response {
     status:ResponseStatus = OK;
 }
 
 
 union Message {
-    StreamBroadCast,
-    StreamPause,
-    StreamStop,
-    StreamFrame,
-    StreamComment,
-    StreamSubscribe,
-    StreamResponse,
-    StreamStatus,
-    StreamUnSubscribe
+    BroadCast,
+    Pause,
+    Stop,
+    Frame,
+    Comment,
+    Subscribe,
+    Response,
+    Status,
+    UnSubscribe
 }
 
 table StreamMessage {

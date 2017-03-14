@@ -40,21 +40,21 @@ message.StreamStatus = {
  */
 message.Message = {
   NONE: 0,
-  StreamBroadCast: 1,
-  StreamPause: 2,
-  StreamStop: 3,
-  StreamFrame: 4,
-  StreamComment: 5,
-  StreamSubscribe: 6,
-  StreamResponse: 7,
-  StreamStatus: 8,
-  StreamUnSubscribe: 9
+  BroadCast: 1,
+  Pause: 2,
+  Stop: 3,
+  Frame: 4,
+  Comment: 5,
+  Subscribe: 6,
+  Response: 7,
+  Status: 8,
+  UnSubscribe: 9
 };
 
 /**
  * @constructor
  */
-message.StreamSubscribe = function() {
+message.Subscribe = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -69,9 +69,9 @@ message.StreamSubscribe = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {message.StreamSubscribe}
+ * @returns {message.Subscribe}
  */
-message.StreamSubscribe.prototype.__init = function(i, bb) {
+message.Subscribe.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -79,17 +79,17 @@ message.StreamSubscribe.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {message.StreamSubscribe=} obj
- * @returns {message.StreamSubscribe}
+ * @param {message.Subscribe=} obj
+ * @returns {message.Subscribe}
  */
-message.StreamSubscribe.getRootAsStreamSubscribe = function(bb, obj) {
-  return (obj || new message.StreamSubscribe).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+message.Subscribe.getRootAsSubscribe = function(bb, obj) {
+  return (obj || new message.Subscribe).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @returns {message.StreamStatus}
  */
-message.StreamSubscribe.prototype.status = function() {
+message.Subscribe.prototype.status = function() {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? /** @type {message.StreamStatus} */ (this.bb.readInt8(this.bb_pos + offset)) : message.StreamStatus.CREATED;
 };
@@ -97,7 +97,7 @@ message.StreamSubscribe.prototype.status = function() {
 /**
  * @param {flatbuffers.Builder} builder
  */
-message.StreamSubscribe.startStreamSubscribe = function(builder) {
+message.Subscribe.startSubscribe = function(builder) {
   builder.startObject(1);
 };
 
@@ -105,7 +105,7 @@ message.StreamSubscribe.startStreamSubscribe = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {message.StreamStatus} status
  */
-message.StreamSubscribe.addStatus = function(builder, status) {
+message.Subscribe.addStatus = function(builder, status) {
   builder.addFieldInt8(0, status, message.StreamStatus.CREATED);
 };
 
@@ -113,7 +113,7 @@ message.StreamSubscribe.addStatus = function(builder, status) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-message.StreamSubscribe.endStreamSubscribe = function(builder) {
+message.Subscribe.endSubscribe = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -121,7 +121,7 @@ message.StreamSubscribe.endStreamSubscribe = function(builder) {
 /**
  * @constructor
  */
-message.StreamUnSubscribe = function() {
+message.UnSubscribe = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -136,9 +136,9 @@ message.StreamUnSubscribe = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {message.StreamUnSubscribe}
+ * @returns {message.UnSubscribe}
  */
-message.StreamUnSubscribe.prototype.__init = function(i, bb) {
+message.UnSubscribe.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -146,17 +146,17 @@ message.StreamUnSubscribe.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {message.StreamUnSubscribe=} obj
- * @returns {message.StreamUnSubscribe}
+ * @param {message.UnSubscribe=} obj
+ * @returns {message.UnSubscribe}
  */
-message.StreamUnSubscribe.getRootAsStreamUnSubscribe = function(bb, obj) {
-  return (obj || new message.StreamUnSubscribe).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+message.UnSubscribe.getRootAsUnSubscribe = function(bb, obj) {
+  return (obj || new message.UnSubscribe).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-message.StreamUnSubscribe.startStreamUnSubscribe = function(builder) {
+message.UnSubscribe.startUnSubscribe = function(builder) {
   builder.startObject(0);
 };
 
@@ -164,7 +164,7 @@ message.StreamUnSubscribe.startStreamUnSubscribe = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-message.StreamUnSubscribe.endStreamUnSubscribe = function(builder) {
+message.UnSubscribe.endUnSubscribe = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -172,7 +172,7 @@ message.StreamUnSubscribe.endStreamUnSubscribe = function(builder) {
 /**
  * @constructor
  */
-message.StreamStatus = function() {
+message.Status = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -187,9 +187,9 @@ message.StreamStatus = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {message.StreamStatus}
+ * @returns {message.Status}
  */
-message.StreamStatus.prototype.__init = function(i, bb) {
+message.Status.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -197,17 +197,17 @@ message.StreamStatus.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {message.StreamStatus=} obj
- * @returns {message.StreamStatus}
+ * @param {message.Status=} obj
+ * @returns {message.Status}
  */
-message.StreamStatus.getRootAsStreamStatus = function(bb, obj) {
-  return (obj || new message.StreamStatus).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+message.Status.getRootAsStatus = function(bb, obj) {
+  return (obj || new message.Status).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @returns {message.StreamStatus}
  */
-message.StreamStatus.prototype.status = function() {
+message.Status.prototype.status = function() {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? /** @type {message.StreamStatus} */ (this.bb.readInt8(this.bb_pos + offset)) : message.StreamStatus.CREATED;
 };
@@ -215,7 +215,7 @@ message.StreamStatus.prototype.status = function() {
 /**
  * @param {flatbuffers.Builder} builder
  */
-message.StreamStatus.startStreamStatus = function(builder) {
+message.Status.startStatus = function(builder) {
   builder.startObject(1);
 };
 
@@ -223,7 +223,7 @@ message.StreamStatus.startStreamStatus = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {message.StreamStatus} status
  */
-message.StreamStatus.addStatus = function(builder, status) {
+message.Status.addStatus = function(builder, status) {
   builder.addFieldInt8(0, status, message.StreamStatus.CREATED);
 };
 
@@ -231,7 +231,7 @@ message.StreamStatus.addStatus = function(builder, status) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-message.StreamStatus.endStreamStatus = function(builder) {
+message.Status.endStatus = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -239,7 +239,7 @@ message.StreamStatus.endStreamStatus = function(builder) {
 /**
  * @constructor
  */
-message.StreamBroadCast = function() {
+message.BroadCast = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -254,9 +254,9 @@ message.StreamBroadCast = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {message.StreamBroadCast}
+ * @returns {message.BroadCast}
  */
-message.StreamBroadCast.prototype.__init = function(i, bb) {
+message.BroadCast.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -264,17 +264,17 @@ message.StreamBroadCast.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {message.StreamBroadCast=} obj
- * @returns {message.StreamBroadCast}
+ * @param {message.BroadCast=} obj
+ * @returns {message.BroadCast}
  */
-message.StreamBroadCast.getRootAsStreamBroadCast = function(bb, obj) {
-  return (obj || new message.StreamBroadCast).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+message.BroadCast.getRootAsBroadCast = function(bb, obj) {
+  return (obj || new message.BroadCast).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @returns {message.InputEncoding}
  */
-message.StreamBroadCast.prototype.encoding = function() {
+message.BroadCast.prototype.encoding = function() {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? /** @type {message.InputEncoding} */ (this.bb.readInt8(this.bb_pos + offset)) : message.InputEncoding.Opus;
 };
@@ -282,7 +282,7 @@ message.StreamBroadCast.prototype.encoding = function() {
 /**
  * @param {flatbuffers.Builder} builder
  */
-message.StreamBroadCast.startStreamBroadCast = function(builder) {
+message.BroadCast.startBroadCast = function(builder) {
   builder.startObject(1);
 };
 
@@ -290,7 +290,7 @@ message.StreamBroadCast.startStreamBroadCast = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {message.InputEncoding} encoding
  */
-message.StreamBroadCast.addEncoding = function(builder, encoding) {
+message.BroadCast.addEncoding = function(builder, encoding) {
   builder.addFieldInt8(0, encoding, message.InputEncoding.Opus);
 };
 
@@ -298,7 +298,7 @@ message.StreamBroadCast.addEncoding = function(builder, encoding) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-message.StreamBroadCast.endStreamBroadCast = function(builder) {
+message.BroadCast.endBroadCast = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -306,7 +306,7 @@ message.StreamBroadCast.endStreamBroadCast = function(builder) {
 /**
  * @constructor
  */
-message.StreamPause = function() {
+message.Pause = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -321,9 +321,9 @@ message.StreamPause = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {message.StreamPause}
+ * @returns {message.Pause}
  */
-message.StreamPause.prototype.__init = function(i, bb) {
+message.Pause.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -331,17 +331,17 @@ message.StreamPause.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {message.StreamPause=} obj
- * @returns {message.StreamPause}
+ * @param {message.Pause=} obj
+ * @returns {message.Pause}
  */
-message.StreamPause.getRootAsStreamPause = function(bb, obj) {
-  return (obj || new message.StreamPause).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+message.Pause.getRootAsPause = function(bb, obj) {
+  return (obj || new message.Pause).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-message.StreamPause.startStreamPause = function(builder) {
+message.Pause.startPause = function(builder) {
   builder.startObject(0);
 };
 
@@ -349,7 +349,7 @@ message.StreamPause.startStreamPause = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-message.StreamPause.endStreamPause = function(builder) {
+message.Pause.endPause = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -357,7 +357,7 @@ message.StreamPause.endStreamPause = function(builder) {
 /**
  * @constructor
  */
-message.StreamStop = function() {
+message.Stop = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -372,9 +372,9 @@ message.StreamStop = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {message.StreamStop}
+ * @returns {message.Stop}
  */
-message.StreamStop.prototype.__init = function(i, bb) {
+message.Stop.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -382,17 +382,17 @@ message.StreamStop.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {message.StreamStop=} obj
- * @returns {message.StreamStop}
+ * @param {message.Stop=} obj
+ * @returns {message.Stop}
  */
-message.StreamStop.getRootAsStreamStop = function(bb, obj) {
-  return (obj || new message.StreamStop).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+message.Stop.getRootAsStop = function(bb, obj) {
+  return (obj || new message.Stop).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-message.StreamStop.startStreamStop = function(builder) {
+message.Stop.startStop = function(builder) {
   builder.startObject(0);
 };
 
@@ -400,7 +400,7 @@ message.StreamStop.startStreamStop = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-message.StreamStop.endStreamStop = function(builder) {
+message.Stop.endStop = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -408,7 +408,7 @@ message.StreamStop.endStreamStop = function(builder) {
 /**
  * @constructor
  */
-message.StreamFrame = function() {
+message.Frame = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -423,9 +423,9 @@ message.StreamFrame = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {message.StreamFrame}
+ * @returns {message.Frame}
  */
-message.StreamFrame.prototype.__init = function(i, bb) {
+message.Frame.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -433,17 +433,17 @@ message.StreamFrame.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {message.StreamFrame=} obj
- * @returns {message.StreamFrame}
+ * @param {message.Frame=} obj
+ * @returns {message.Frame}
  */
-message.StreamFrame.getRootAsStreamFrame = function(bb, obj) {
-  return (obj || new message.StreamFrame).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+message.Frame.getRootAsFrame = function(bb, obj) {
+  return (obj || new message.Frame).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @returns {number}
  */
-message.StreamFrame.prototype.frameSize = function() {
+message.Frame.prototype.frameSize = function() {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.readUint8(this.bb_pos + offset) : 0;
 };
@@ -451,7 +451,7 @@ message.StreamFrame.prototype.frameSize = function() {
 /**
  * @returns {number}
  */
-message.StreamFrame.prototype.sampleRate = function() {
+message.Frame.prototype.sampleRate = function() {
   var offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
 };
@@ -459,7 +459,7 @@ message.StreamFrame.prototype.sampleRate = function() {
 /**
  * @returns {number}
  */
-message.StreamFrame.prototype.channels = function() {
+message.Frame.prototype.channels = function() {
   var offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? this.bb.readUint8(this.bb_pos + offset) : 0;
 };
@@ -468,7 +468,7 @@ message.StreamFrame.prototype.channels = function() {
  * @param {number} index
  * @returns {number}
  */
-message.StreamFrame.prototype.frame = function(index) {
+message.Frame.prototype.frame = function(index) {
   var offset = this.bb.__offset(this.bb_pos, 10);
   return offset ? this.bb.readUint8(this.bb.__vector(this.bb_pos + offset) + index) : 0;
 };
@@ -476,7 +476,7 @@ message.StreamFrame.prototype.frame = function(index) {
 /**
  * @returns {number}
  */
-message.StreamFrame.prototype.frameLength = function() {
+message.Frame.prototype.frameLength = function() {
   var offset = this.bb.__offset(this.bb_pos, 10);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
@@ -484,7 +484,7 @@ message.StreamFrame.prototype.frameLength = function() {
 /**
  * @returns {Uint8Array}
  */
-message.StreamFrame.prototype.frameArray = function() {
+message.Frame.prototype.frameArray = function() {
   var offset = this.bb.__offset(this.bb_pos, 10);
   return offset ? new Uint8Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
 };
@@ -492,7 +492,7 @@ message.StreamFrame.prototype.frameArray = function() {
 /**
  * @param {flatbuffers.Builder} builder
  */
-message.StreamFrame.startStreamFrame = function(builder) {
+message.Frame.startFrame = function(builder) {
   builder.startObject(4);
 };
 
@@ -500,7 +500,7 @@ message.StreamFrame.startStreamFrame = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {number} frameSize
  */
-message.StreamFrame.addFrameSize = function(builder, frameSize) {
+message.Frame.addFrameSize = function(builder, frameSize) {
   builder.addFieldInt8(0, frameSize, 0);
 };
 
@@ -508,7 +508,7 @@ message.StreamFrame.addFrameSize = function(builder, frameSize) {
  * @param {flatbuffers.Builder} builder
  * @param {number} sampleRate
  */
-message.StreamFrame.addSampleRate = function(builder, sampleRate) {
+message.Frame.addSampleRate = function(builder, sampleRate) {
   builder.addFieldInt32(1, sampleRate, 0);
 };
 
@@ -516,7 +516,7 @@ message.StreamFrame.addSampleRate = function(builder, sampleRate) {
  * @param {flatbuffers.Builder} builder
  * @param {number} channels
  */
-message.StreamFrame.addChannels = function(builder, channels) {
+message.Frame.addChannels = function(builder, channels) {
   builder.addFieldInt8(2, channels, 0);
 };
 
@@ -524,7 +524,7 @@ message.StreamFrame.addChannels = function(builder, channels) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} frameOffset
  */
-message.StreamFrame.addFrame = function(builder, frameOffset) {
+message.Frame.addFrame = function(builder, frameOffset) {
   builder.addFieldOffset(3, frameOffset, 0);
 };
 
@@ -533,7 +533,7 @@ message.StreamFrame.addFrame = function(builder, frameOffset) {
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-message.StreamFrame.createFrameVector = function(builder, data) {
+message.Frame.createFrameVector = function(builder, data) {
   builder.startVector(1, data.length, 1);
   for (var i = data.length - 1; i >= 0; i--) {
     builder.addInt8(data[i]);
@@ -545,7 +545,7 @@ message.StreamFrame.createFrameVector = function(builder, data) {
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-message.StreamFrame.startFrameVector = function(builder, numElems) {
+message.Frame.startFrameVector = function(builder, numElems) {
   builder.startVector(1, numElems, 1);
 };
 
@@ -553,7 +553,7 @@ message.StreamFrame.startFrameVector = function(builder, numElems) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-message.StreamFrame.endStreamFrame = function(builder) {
+message.Frame.endFrame = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -561,7 +561,7 @@ message.StreamFrame.endStreamFrame = function(builder) {
 /**
  * @constructor
  */
-message.StreamComment = function() {
+message.Comment = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -576,9 +576,9 @@ message.StreamComment = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {message.StreamComment}
+ * @returns {message.Comment}
  */
-message.StreamComment.prototype.__init = function(i, bb) {
+message.Comment.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -586,18 +586,18 @@ message.StreamComment.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {message.StreamComment=} obj
- * @returns {message.StreamComment}
+ * @param {message.Comment=} obj
+ * @returns {message.Comment}
  */
-message.StreamComment.getRootAsStreamComment = function(bb, obj) {
-  return (obj || new message.StreamComment).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+message.Comment.getRootAsComment = function(bb, obj) {
+  return (obj || new message.Comment).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array}
  */
-message.StreamComment.prototype.userName = function(optionalEncoding) {
+message.Comment.prototype.userName = function(optionalEncoding) {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
 };
@@ -606,7 +606,7 @@ message.StreamComment.prototype.userName = function(optionalEncoding) {
  * @param {flatbuffers.Encoding=} optionalEncoding
  * @returns {string|Uint8Array}
  */
-message.StreamComment.prototype.text = function(optionalEncoding) {
+message.Comment.prototype.text = function(optionalEncoding) {
   var offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
 };
@@ -614,7 +614,7 @@ message.StreamComment.prototype.text = function(optionalEncoding) {
 /**
  * @param {flatbuffers.Builder} builder
  */
-message.StreamComment.startStreamComment = function(builder) {
+message.Comment.startComment = function(builder) {
   builder.startObject(2);
 };
 
@@ -622,7 +622,7 @@ message.StreamComment.startStreamComment = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} userNameOffset
  */
-message.StreamComment.addUserName = function(builder, userNameOffset) {
+message.Comment.addUserName = function(builder, userNameOffset) {
   builder.addFieldOffset(0, userNameOffset, 0);
 };
 
@@ -630,7 +630,7 @@ message.StreamComment.addUserName = function(builder, userNameOffset) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} textOffset
  */
-message.StreamComment.addText = function(builder, textOffset) {
+message.Comment.addText = function(builder, textOffset) {
   builder.addFieldOffset(1, textOffset, 0);
 };
 
@@ -638,7 +638,7 @@ message.StreamComment.addText = function(builder, textOffset) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-message.StreamComment.endStreamComment = function(builder) {
+message.Comment.endComment = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -646,7 +646,7 @@ message.StreamComment.endStreamComment = function(builder) {
 /**
  * @constructor
  */
-message.StreamResponse = function() {
+message.Response = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -661,9 +661,9 @@ message.StreamResponse = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {message.StreamResponse}
+ * @returns {message.Response}
  */
-message.StreamResponse.prototype.__init = function(i, bb) {
+message.Response.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -671,17 +671,17 @@ message.StreamResponse.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {message.StreamResponse=} obj
- * @returns {message.StreamResponse}
+ * @param {message.Response=} obj
+ * @returns {message.Response}
  */
-message.StreamResponse.getRootAsStreamResponse = function(bb, obj) {
-  return (obj || new message.StreamResponse).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+message.Response.getRootAsResponse = function(bb, obj) {
+  return (obj || new message.Response).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @returns {message.ResponseStatus}
  */
-message.StreamResponse.prototype.status = function() {
+message.Response.prototype.status = function() {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? /** @type {message.ResponseStatus} */ (this.bb.readInt8(this.bb_pos + offset)) : message.ResponseStatus.OK;
 };
@@ -689,7 +689,7 @@ message.StreamResponse.prototype.status = function() {
 /**
  * @param {flatbuffers.Builder} builder
  */
-message.StreamResponse.startStreamResponse = function(builder) {
+message.Response.startResponse = function(builder) {
   builder.startObject(1);
 };
 
@@ -697,7 +697,7 @@ message.StreamResponse.startStreamResponse = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {message.ResponseStatus} status
  */
-message.StreamResponse.addStatus = function(builder, status) {
+message.Response.addStatus = function(builder, status) {
   builder.addFieldInt8(0, status, message.ResponseStatus.OK);
 };
 
@@ -705,7 +705,7 @@ message.StreamResponse.addStatus = function(builder, status) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-message.StreamResponse.endStreamResponse = function(builder) {
+message.Response.endResponse = function(builder) {
   var offset = builder.endObject();
   return offset;
 };

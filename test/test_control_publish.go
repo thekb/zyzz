@@ -24,7 +24,7 @@ const (
 func main() {
 	var err error
 	var wsRead []byte
-	streamId := "pjxiezxCC"
+	streamId := "nRSFYNx--"
 	eventId := "pfYX3Z1C-"
 	b := fb.NewBuilder(1024)
 	pa.Initialize()
@@ -62,10 +62,10 @@ func main() {
 	fmt.Println("stream mesage type:", streamMessage.MessageType())
 	table := new(fb.Table)
 	if streamMessage.Message(table) {
-		if streamMessage.MessageType() == m.MessageStreamResponse {
-			response := new(m.StreamResponse)
+		if streamMessage.MessageType() == m.MessageResponse {
+			response := new(m.Response)
 			response.Init(table.Bytes, table.Pos)
-			if response.Status() != m.StatusOK {
+			if response.Status() != m.ResponseStatusOK {
 				fmt.Println("status not ok,", response.Status())
 				c.Close()
 				return
@@ -87,8 +87,8 @@ func main() {
 			fmt.Println(string(message.StreamId()))
 			fmt.Println(message.MessageType())
 			if message.Message(table) {
-				if message.MessageType() == m.MessageStreamComment {
-					comment := new(m.StreamComment)
+				if message.MessageType() == m.MessageComment {
+					comment := new(m.Comment)
 					comment.Init(table.Bytes, table.Pos)
 					fmt.Println(string(comment.Text()))
 					fmt.Println(string(comment.UserName()))
@@ -106,7 +106,7 @@ func main() {
 	encoder, err = opus.NewEncoder(SAMPLE_RATE, INPUT_CHANNELS, opus.AppAudio)
 
 	fmt.Println("sending stream")
-	timeout := time.After(time.Millisecond * 100)
+	timeout := time.After(time.Second * 120)
 	ticker := time.Tick(time.Millisecond * FRAMES_SIZE)
 
 	L:
@@ -125,7 +125,7 @@ func main() {
 			}
 			if n > 2 {
 				c.WriteMessage(ws.BinaryMessage, GetStreamFrameMessage(b, encoderBuffer[:n], streamId, eventId))
-				c.WriteMessage(ws.BinaryMessage, GetStreamCommentMessage(b, streamId, eventId, "username", "comment"))
+				c.WriteMessage(ws.BinaryMessage, GetCommentMessage(b, streamId, eventId, "username", "comment"))
 			}
 
 		}
@@ -135,11 +135,11 @@ func main() {
 	// send stream pause
 	c.WriteMessage(ws.BinaryMessage, GetStreamPauseMessage(b, streamId, eventId))
 	// send comment
-	c.WriteMessage(ws.BinaryMessage, GetStreamCommentMessage(b, streamId, eventId, "username", "comment"))
+	c.WriteMessage(ws.BinaryMessage, GetCommentMessage(b, streamId, eventId, "username", "comment"))
 	// send stream stop
 	c.WriteMessage(ws.BinaryMessage, GetStreamStopMessage(b, streamId, eventId))
 	// send comment
-	c.WriteMessage(ws.BinaryMessage, GetStreamCommentMessage(b, streamId, eventId, "username", "comment"))
+	c.WriteMessage(ws.BinaryMessage, GetCommentMessage(b, streamId, eventId, "username", "comment"))
 
 }
 
@@ -149,13 +149,13 @@ func GetStreamPauseMessage(b *fb.Builder, streamId, eventId string) []byte {
 	streamIdOffset := b.CreateString(streamId)
 	eventIdOffset := b.CreateString(eventId)
 
-	m.StreamPauseStart(b)
-	streamPauseOffset := m.StreamPauseEnd(b)
+	m.PauseStart(b)
+	streamPauseOffset := m.PauseEnd(b)
 
 	m.StreamMessageStart(b)
 	m.StreamMessageAddEventId(b, eventIdOffset)
 	m.StreamMessageAddStreamId(b, streamIdOffset)
-	m.StreamMessageAddMessageType(b, m.MessageStreamPause)
+	m.StreamMessageAddMessageType(b, m.MessagePause)
 	m.StreamMessageAddMessage(b, streamPauseOffset)
 	m.StreamMessageAddTimestamp(b, GetTimeInMillis())
 	streamMessageOffset := m.StreamMessageEnd(b)
@@ -170,13 +170,13 @@ func GetStreamStopMessage(b *fb.Builder, streamId, eventId string) []byte {
 	streamIdOffset := b.CreateString(streamId)
 	eventIdOffset := b.CreateString(eventId)
 
-	m.StreamStopStart(b)
-	streamStopOffset := m.StreamStopEnd(b)
+	m.StopStart(b)
+	streamStopOffset := m.StopEnd(b)
 
 	m.StreamMessageStart(b)
 	m.StreamMessageAddEventId(b, eventIdOffset)
 	m.StreamMessageAddStreamId(b, streamIdOffset)
-	m.StreamMessageAddMessageType(b, m.MessageStreamStop)
+	m.StreamMessageAddMessageType(b, m.MessageStop)
 	m.StreamMessageAddMessage(b, streamStopOffset)
 	m.StreamMessageAddTimestamp(b, GetTimeInMillis())
 	streamMessageOffset := m.StreamMessageEnd(b)
@@ -185,7 +185,7 @@ func GetStreamStopMessage(b *fb.Builder, streamId, eventId string) []byte {
 	return b.FinishedBytes()
 }
 
-func GetStreamCommentMessage(b *fb.Builder, streamId, eventId, userName, text string) []byte {
+func GetCommentMessage(b *fb.Builder, streamId, eventId, userName, text string) []byte {
 	b.Reset()
 
 	streamIdOffset := b.CreateString(streamId)
@@ -193,15 +193,15 @@ func GetStreamCommentMessage(b *fb.Builder, streamId, eventId, userName, text st
 	userNameOffset := b.CreateString(userName)
 	textOffset := b.CreateString(text)
 
-	m.StreamCommentStart(b)
-	m.StreamCommentAddUserName(b, userNameOffset)
-	m.StreamCommentAddText(b, textOffset)
-	streamCommentOffset := m.StreamCommentEnd(b)
+	m.CommentStart(b)
+	m.CommentAddUserName(b, userNameOffset)
+	m.CommentAddText(b, textOffset)
+	streamCommentOffset := m.CommentEnd(b)
 
 	m.StreamMessageStart(b)
 	m.StreamMessageAddEventId(b, eventIdOffset)
 	m.StreamMessageAddStreamId(b, streamIdOffset)
-	m.StreamMessageAddMessageType(b, m.MessageStreamComment)
+	m.StreamMessageAddMessageType(b, m.MessageComment)
 	m.StreamMessageAddMessage(b, streamCommentOffset)
 	m.StreamMessageAddTimestamp(b, GetTimeInMillis())
 	streamMessageOffset := m.StreamMessageEnd(b)
@@ -215,14 +215,14 @@ func GetStreamBroadCastMessage(b *fb.Builder, streamId, eventId string) []byte {
 	streamIdOffset := b.CreateString(streamId)
 	eventIdOffset := b.CreateString(eventId)
 
-	m.StreamBroadCastStart(b)
-	m.StreamBroadCastAddEncoding(b, m.InputEncodingOpus)
-	streamBroadcastOffset := m.StreamBroadCastEnd(b)
+	m.BroadCastStart(b)
+	m.BroadCastAddEncoding(b, m.InputEncodingOpus)
+	streamBroadcastOffset := m.BroadCastEnd(b)
 
 	m.StreamMessageStart(b)
 	m.StreamMessageAddEventId(b, eventIdOffset)
 	m.StreamMessageAddStreamId(b, streamIdOffset)
-	m.StreamMessageAddMessageType(b, m.MessageStreamBroadCast)
+	m.StreamMessageAddMessageType(b, m.MessageBroadCast)
 	m.StreamMessageAddMessage(b, streamBroadcastOffset)
 	m.StreamMessageAddTimestamp(b, GetTimeInMillis())
 	streamMessageOffset := m.StreamMessageEnd(b)
@@ -236,7 +236,7 @@ func GetStreamFrameMessage(b *fb.Builder, input []byte, streamId, eventId string
 
 	frameLength := len(input)
 
-	m.StreamFrameStartFrameVector(b, frameLength)
+	m.FrameStartFrameVector(b, frameLength)
 	// iterate in reverse order
 	for i := frameLength - 1; i >=0; i-- {
 		b.PrependByte(input[i])
@@ -246,16 +246,16 @@ func GetStreamFrameMessage(b *fb.Builder, input []byte, streamId, eventId string
 	streamIdOffset := b.CreateString(streamId)
 	eventIdOffset := b.CreateString(eventId)
 
-	m.StreamFrameStart(b)
-	m.StreamFrameAddFrameSize(b, byte(FRAMES_SIZE))
-	m.StreamFrameAddSampleRate(b, uint32(SAMPLE_RATE))
-	m.StreamFrameAddChannels(b, byte(INPUT_CHANNELS))
-	m.StreamFrameAddFrame(b, frameOffset)
-	streamFrameOffset := m.StreamFrameEnd(b)
+	m.FrameStart(b)
+	m.FrameAddFrameSize(b, byte(FRAMES_SIZE))
+	m.FrameAddSampleRate(b, uint32(SAMPLE_RATE))
+	m.FrameAddChannels(b, byte(INPUT_CHANNELS))
+	m.FrameAddFrame(b, frameOffset)
+	streamFrameOffset := m.FrameEnd(b)
 	m.StreamMessageStart(b)
 	m.StreamMessageAddEventId(b, eventIdOffset)
 	m.StreamMessageAddStreamId(b, streamIdOffset)
-	m.StreamMessageAddMessageType(b, m.MessageStreamFrame)
+	m.StreamMessageAddMessageType(b, m.MessageFrame)
 	m.StreamMessageAddMessage(b, streamFrameOffset)
 	m.StreamMessageAddTimestamp(b, GetTimeInMillis())
 	streamMessageOffset := m.StreamMessageEnd(b)

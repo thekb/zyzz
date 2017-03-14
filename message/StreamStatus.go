@@ -2,48 +2,17 @@
 
 package message
 
-import (
-	flatbuffers "github.com/google/flatbuffers/go"
+const (
+	StreamStatusCREATED = 0
+	StreamStatusSTREAMING = 1
+	StreamStatusSTOPPED = 2
+	StreamStatusERROR = 3
 )
 
-type StreamStatus struct {
-	_tab flatbuffers.Table
+var EnumNamesStreamStatus = map[int]string{
+	StreamStatusCREATED:"CREATED",
+	StreamStatusSTREAMING:"STREAMING",
+	StreamStatusSTOPPED:"STOPPED",
+	StreamStatusERROR:"ERROR",
 }
 
-func GetRootAsStreamStatus(buf []byte, offset flatbuffers.UOffsetT) *StreamStatus {
-	n := flatbuffers.GetUOffsetT(buf[offset:])
-	x := &StreamStatus{}
-	x.Init(buf, n+offset)
-	return x
-}
-
-func (rcv *StreamStatus) Init(buf []byte, i flatbuffers.UOffsetT) {
-	rcv._tab.Bytes = buf
-	rcv._tab.Pos = i
-}
-
-func (rcv *StreamStatus) Table() flatbuffers.Table {
-	return rcv._tab
-}
-
-func (rcv *StreamStatus) Status() int8 {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
-	if o != 0 {
-		return rcv._tab.GetInt8(o + rcv._tab.Pos)
-	}
-	return 0
-}
-
-func (rcv *StreamStatus) MutateStatus(n int8) bool {
-	return rcv._tab.MutateInt8Slot(4, n)
-}
-
-func StreamStatusStart(builder *flatbuffers.Builder) {
-	builder.StartObject(1)
-}
-func StreamStatusAddStatus(builder *flatbuffers.Builder, status int8) {
-	builder.PrependInt8Slot(0, status, 0)
-}
-func StreamStatusEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
-	return builder.EndObject()
-}

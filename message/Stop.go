@@ -6,29 +6,29 @@ import (
 	flatbuffers "github.com/google/flatbuffers/go"
 )
 
-type StreamStop struct {
+type Stop struct {
 	_tab flatbuffers.Table
 }
 
-func GetRootAsStreamStop(buf []byte, offset flatbuffers.UOffsetT) *StreamStop {
+func GetRootAsStop(buf []byte, offset flatbuffers.UOffsetT) *Stop {
 	n := flatbuffers.GetUOffsetT(buf[offset:])
-	x := &StreamStop{}
+	x := &Stop{}
 	x.Init(buf, n+offset)
 	return x
 }
 
-func (rcv *StreamStop) Init(buf []byte, i flatbuffers.UOffsetT) {
+func (rcv *Stop) Init(buf []byte, i flatbuffers.UOffsetT) {
 	rcv._tab.Bytes = buf
 	rcv._tab.Pos = i
 }
 
-func (rcv *StreamStop) Table() flatbuffers.Table {
+func (rcv *Stop) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func StreamStopStart(builder *flatbuffers.Builder) {
+func StopStart(builder *flatbuffers.Builder) {
 	builder.StartObject(0)
 }
-func StreamStopEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+func StopEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }

@@ -6,27 +6,27 @@ import (
 	flatbuffers "github.com/google/flatbuffers/go"
 )
 
-type StreamFrame struct {
+type Frame struct {
 	_tab flatbuffers.Table
 }
 
-func GetRootAsStreamFrame(buf []byte, offset flatbuffers.UOffsetT) *StreamFrame {
+func GetRootAsFrame(buf []byte, offset flatbuffers.UOffsetT) *Frame {
 	n := flatbuffers.GetUOffsetT(buf[offset:])
-	x := &StreamFrame{}
+	x := &Frame{}
 	x.Init(buf, n+offset)
 	return x
 }
 
-func (rcv *StreamFrame) Init(buf []byte, i flatbuffers.UOffsetT) {
+func (rcv *Frame) Init(buf []byte, i flatbuffers.UOffsetT) {
 	rcv._tab.Bytes = buf
 	rcv._tab.Pos = i
 }
 
-func (rcv *StreamFrame) Table() flatbuffers.Table {
+func (rcv *Frame) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func (rcv *StreamFrame) FrameSize() byte {
+func (rcv *Frame) FrameSize() byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
 	if o != 0 {
 		return rcv._tab.GetByte(o + rcv._tab.Pos)
@@ -34,11 +34,11 @@ func (rcv *StreamFrame) FrameSize() byte {
 	return 0
 }
 
-func (rcv *StreamFrame) MutateFrameSize(n byte) bool {
+func (rcv *Frame) MutateFrameSize(n byte) bool {
 	return rcv._tab.MutateByteSlot(4, n)
 }
 
-func (rcv *StreamFrame) SampleRate() uint32 {
+func (rcv *Frame) SampleRate() uint32 {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
 		return rcv._tab.GetUint32(o + rcv._tab.Pos)
@@ -46,11 +46,11 @@ func (rcv *StreamFrame) SampleRate() uint32 {
 	return 0
 }
 
-func (rcv *StreamFrame) MutateSampleRate(n uint32) bool {
+func (rcv *Frame) MutateSampleRate(n uint32) bool {
 	return rcv._tab.MutateUint32Slot(6, n)
 }
 
-func (rcv *StreamFrame) Channels() byte {
+func (rcv *Frame) Channels() byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		return rcv._tab.GetByte(o + rcv._tab.Pos)
@@ -58,11 +58,11 @@ func (rcv *StreamFrame) Channels() byte {
 	return 0
 }
 
-func (rcv *StreamFrame) MutateChannels(n byte) bool {
+func (rcv *Frame) MutateChannels(n byte) bool {
 	return rcv._tab.MutateByteSlot(8, n)
 }
 
-func (rcv *StreamFrame) Frame(j int) byte {
+func (rcv *Frame) Frame(j int) byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
 	if o != 0 {
 		a := rcv._tab.Vector(o)
@@ -71,7 +71,7 @@ func (rcv *StreamFrame) Frame(j int) byte {
 	return 0
 }
 
-func (rcv *StreamFrame) FrameLength() int {
+func (rcv *Frame) FrameLength() int {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
 	if o != 0 {
 		return rcv._tab.VectorLen(o)
@@ -79,7 +79,7 @@ func (rcv *StreamFrame) FrameLength() int {
 	return 0
 }
 
-func (rcv *StreamFrame) FrameBytes() []byte {
+func (rcv *Frame) FrameBytes() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
 	if o != 0 {
 		return rcv._tab.ByteVector(o + rcv._tab.Pos)
@@ -87,24 +87,24 @@ func (rcv *StreamFrame) FrameBytes() []byte {
 	return nil
 }
 
-func StreamFrameStart(builder *flatbuffers.Builder) {
+func FrameStart(builder *flatbuffers.Builder) {
 	builder.StartObject(4)
 }
-func StreamFrameAddFrameSize(builder *flatbuffers.Builder, frameSize byte) {
+func FrameAddFrameSize(builder *flatbuffers.Builder, frameSize byte) {
 	builder.PrependByteSlot(0, frameSize, 0)
 }
-func StreamFrameAddSampleRate(builder *flatbuffers.Builder, sampleRate uint32) {
+func FrameAddSampleRate(builder *flatbuffers.Builder, sampleRate uint32) {
 	builder.PrependUint32Slot(1, sampleRate, 0)
 }
-func StreamFrameAddChannels(builder *flatbuffers.Builder, channels byte) {
+func FrameAddChannels(builder *flatbuffers.Builder, channels byte) {
 	builder.PrependByteSlot(2, channels, 0)
 }
-func StreamFrameAddFrame(builder *flatbuffers.Builder, frame flatbuffers.UOffsetT) {
+func FrameAddFrame(builder *flatbuffers.Builder, frame flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(3, flatbuffers.UOffsetT(frame), 0)
 }
-func StreamFrameStartFrameVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
+func FrameStartFrameVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
 	return builder.StartVector(1, numElems, 1)
 }
-func StreamFrameEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+func FrameEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }

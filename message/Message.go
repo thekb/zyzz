@@ -4,27 +4,27 @@ package message
 
 const (
 	MessageNONE = 0
-	MessageStreamBroadCast = 1
-	MessageStreamPause = 2
-	MessageStreamStop = 3
-	MessageStreamFrame = 4
-	MessageStreamComment = 5
-	MessageStreamSubscribe = 6
-	MessageStreamResponse = 7
-	MessageStreamStatus = 8
-	MessageStreamUnSubscribe = 9
+	MessageBroadCast = 1
+	MessagePause = 2
+	MessageStop = 3
+	MessageFrame = 4
+	MessageComment = 5
+	MessageSubscribe = 6
+	MessageResponse = 7
+	MessageStatus = 8
+	MessageUnSubscribe = 9
 )
 
 var EnumNamesMessage = map[int]string{
 	MessageNONE:"NONE",
-	MessageStreamBroadCast:"StreamBroadCast",
-	MessageStreamPause:"StreamPause",
-	MessageStreamStop:"StreamStop",
-	MessageStreamFrame:"StreamFrame",
-	MessageStreamComment:"StreamComment",
-	MessageStreamSubscribe:"StreamSubscribe",
-	MessageStreamResponse:"StreamResponse",
-	MessageStreamStatus:"StreamStatus",
-	MessageStreamUnSubscribe:"StreamUnSubscribe",
+	MessageBroadCast:"BroadCast",
+	MessagePause:"Pause",
+	MessageStop:"Stop",
+	MessageFrame:"Frame",
+	MessageComment:"Comment",
+	MessageSubscribe:"Subscribe",
+	MessageResponse:"Response",
+	MessageStatus:"Status",
+	MessageUnSubscribe:"UnSubscribe",
 }
 

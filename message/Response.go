@@ -6,27 +6,27 @@ import (
 	flatbuffers "github.com/google/flatbuffers/go"
 )
 
-type StreamResponse struct {
+type Response struct {
 	_tab flatbuffers.Table
 }
 
-func GetRootAsStreamResponse(buf []byte, offset flatbuffers.UOffsetT) *StreamResponse {
+func GetRootAsResponse(buf []byte, offset flatbuffers.UOffsetT) *Response {
 	n := flatbuffers.GetUOffsetT(buf[offset:])
-	x := &StreamResponse{}
+	x := &Response{}
 	x.Init(buf, n+offset)
 	return x
 }
 
-func (rcv *StreamResponse) Init(buf []byte, i flatbuffers.UOffsetT) {
+func (rcv *Response) Init(buf []byte, i flatbuffers.UOffsetT) {
 	rcv._tab.Bytes = buf
 	rcv._tab.Pos = i
 }
 
-func (rcv *StreamResponse) Table() flatbuffers.Table {
+func (rcv *Response) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func (rcv *StreamResponse) Status() int8 {
+func (rcv *Response) Status() int8 {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
 	if o != 0 {
 		return rcv._tab.GetInt8(o + rcv._tab.Pos)
@@ -34,16 +34,16 @@ func (rcv *StreamResponse) Status() int8 {
 	return 1
 }
 
-func (rcv *StreamResponse) MutateStatus(n int8) bool {
+func (rcv *Response) MutateStatus(n int8) bool {
 	return rcv._tab.MutateInt8Slot(4, n)
 }
 
-func StreamResponseStart(builder *flatbuffers.Builder) {
+func ResponseStart(builder *flatbuffers.Builder) {
 	builder.StartObject(1)
 }
-func StreamResponseAddStatus(builder *flatbuffers.Builder, status int8) {
+func ResponseAddStatus(builder *flatbuffers.Builder, status int8) {
 	builder.PrependInt8Slot(0, status, 1)
 }
-func StreamResponseEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+func ResponseEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }

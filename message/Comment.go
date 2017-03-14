@@ -6,27 +6,27 @@ import (
 	flatbuffers "github.com/google/flatbuffers/go"
 )
 
-type StreamComment struct {
+type Comment struct {
 	_tab flatbuffers.Table
 }
 
-func GetRootAsStreamComment(buf []byte, offset flatbuffers.UOffsetT) *StreamComment {
+func GetRootAsComment(buf []byte, offset flatbuffers.UOffsetT) *Comment {
 	n := flatbuffers.GetUOffsetT(buf[offset:])
-	x := &StreamComment{}
+	x := &Comment{}
 	x.Init(buf, n+offset)
 	return x
 }
 
-func (rcv *StreamComment) Init(buf []byte, i flatbuffers.UOffsetT) {
+func (rcv *Comment) Init(buf []byte, i flatbuffers.UOffsetT) {
 	rcv._tab.Bytes = buf
 	rcv._tab.Pos = i
 }
 
-func (rcv *StreamComment) Table() flatbuffers.Table {
+func (rcv *Comment) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func (rcv *StreamComment) UserName() []byte {
+func (rcv *Comment) UserName() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
 	if o != 0 {
 		return rcv._tab.ByteVector(o + rcv._tab.Pos)
@@ -34,7 +34,7 @@ func (rcv *StreamComment) UserName() []byte {
 	return nil
 }
 
-func (rcv *StreamComment) Text() []byte {
+func (rcv *Comment) Text() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
 		return rcv._tab.ByteVector(o + rcv._tab.Pos)
@@ -42,15 +42,15 @@ func (rcv *StreamComment) Text() []byte {
 	return nil
 }
 
-func StreamCommentStart(builder *flatbuffers.Builder) {
+func CommentStart(builder *flatbuffers.Builder) {
 	builder.StartObject(2)
 }
-func StreamCommentAddUserName(builder *flatbuffers.Builder, userName flatbuffers.UOffsetT) {
+func CommentAddUserName(builder *flatbuffers.Builder, userName flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(userName), 0)
 }
-func StreamCommentAddText(builder *flatbuffers.Builder, text flatbuffers.UOffsetT) {
+func CommentAddText(builder *flatbuffers.Builder, text flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(text), 0)
 }
-func StreamCommentEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+func CommentEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }
