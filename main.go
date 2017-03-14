@@ -105,7 +105,7 @@ func main() {
 	streamParty.Handle("GET", "/ws/subscribe/:id", &stream.WebSocketSubscriber{api.Common{DB:d}})
 	streamParty.Handle("GET", "/http/subscribe/:id", &stream.SubscribeStream{api.Common{DB:d}})
 
-	cricbuzzParty := app.Party("/api/cricbuzz", sessionMiddleware)
+	cricbuzzParty := app.Party("/api/cricbuzz")
 	cricbuzzParty.Handle("GET", "/:id", &api.GetCricketScores{api.Common{DB:d}})
 
 	app.Handle("GET", "/control", &control.Control{DB:d})
