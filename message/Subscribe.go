@@ -26,23 +26,8 @@ func (rcv *Subscribe) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func (rcv *Subscribe) Status() int8 {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
-	if o != 0 {
-		return rcv._tab.GetInt8(o + rcv._tab.Pos)
-	}
-	return 0
-}
-
-func (rcv *Subscribe) MutateStatus(n int8) bool {
-	return rcv._tab.MutateInt8Slot(4, n)
-}
-
 func SubscribeStart(builder *flatbuffers.Builder) {
-	builder.StartObject(1)
-}
-func SubscribeAddStatus(builder *flatbuffers.Builder, status int8) {
-	builder.PrependInt8Slot(0, status, 0)
+	builder.StartObject(0)
 }
 func SubscribeEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()

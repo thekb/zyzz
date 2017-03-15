@@ -283,6 +283,7 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			models.SetStreamStatus(db, streamId, models.STATUS_STOPPED)
 			ctx.pushMessage(StopHeader, msg)
 		}
+		// TODO should we cleanup after stop ?
 	case m.MessageFrame:
 		fmt.Println("handling stream frame")
 		if ctx.streamStarted {
@@ -327,6 +328,7 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 		ctx.currentStream = nil
 		ctx.streamStarted = false
 		ctx.closeSubSocket <- true
+		ctx.pushSocket.Close()
 	case m.MessageComment:
 		fmt.Println("handling stream comment")
 		if ctx.streamStarted {
@@ -350,6 +352,7 @@ func (ctx *ControlContext) getStreamStatus(db *sqlx.DB, eventId, streamId string
 
 	m.StatusStart(ctx.builder)
 	m.StatusAddStatus(ctx.builder, int8(stream.Status))
+	m.StatusAddSubscribeCount(ctx.builder, int32(stream.SubscriberCount))
 	statusOffset := m.StatusEnd(ctx.builder)
 
 	m.StreamMessageStart(ctx.builder)

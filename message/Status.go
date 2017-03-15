@@ -38,11 +38,26 @@ func (rcv *Status) MutateStatus(n int8) bool {
 	return rcv._tab.MutateInt8Slot(4, n)
 }
 
+func (rcv *Status) SubscribeCount() int32 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		return rcv._tab.GetInt32(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *Status) MutateSubscribeCount(n int32) bool {
+	return rcv._tab.MutateInt32Slot(6, n)
+}
+
 func StatusStart(builder *flatbuffers.Builder) {
-	builder.StartObject(1)
+	builder.StartObject(2)
 }
 func StatusAddStatus(builder *flatbuffers.Builder, status int8) {
 	builder.PrependInt8Slot(0, status, 0)
+}
+func StatusAddSubscribeCount(builder *flatbuffers.Builder, subscribeCount int32) {
+	builder.PrependInt32Slot(1, subscribeCount, 0)
 }
 func StatusEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()

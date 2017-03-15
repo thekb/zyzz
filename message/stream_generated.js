@@ -87,26 +87,10 @@ message.Subscribe.getRootAsSubscribe = function(bb, obj) {
 };
 
 /**
- * @returns {message.StreamStatus}
- */
-message.Subscribe.prototype.status = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? /** @type {message.StreamStatus} */ (this.bb.readInt8(this.bb_pos + offset)) : message.StreamStatus.CREATED;
-};
-
-/**
  * @param {flatbuffers.Builder} builder
  */
 message.Subscribe.startSubscribe = function(builder) {
-  builder.startObject(1);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {message.StreamStatus} status
- */
-message.Subscribe.addStatus = function(builder, status) {
-  builder.addFieldInt8(0, status, message.StreamStatus.CREATED);
+  builder.startObject(0);
 };
 
 /**
@@ -213,10 +197,18 @@ message.Status.prototype.status = function() {
 };
 
 /**
+ * @returns {number}
+ */
+message.Status.prototype.subscribeCount = function() {
+  var offset = this.bb.__offset(this.bb_pos, 6);
+  return offset ? this.bb.readInt32(this.bb_pos + offset) : 0;
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 message.Status.startStatus = function(builder) {
-  builder.startObject(1);
+  builder.startObject(2);
 };
 
 /**
@@ -225,6 +217,14 @@ message.Status.startStatus = function(builder) {
  */
 message.Status.addStatus = function(builder, status) {
   builder.addFieldInt8(0, status, message.StreamStatus.CREATED);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {number} subscribeCount
+ */
+message.Status.addSubscribeCount = function(builder, subscribeCount) {
+  builder.addFieldInt32(1, subscribeCount, 0);
 };
 
 /**

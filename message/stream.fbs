@@ -5,7 +5,6 @@ enum ResponseStatus : byte {OK = 1, NoStream, NotAllowed, Error}
 enum StreamStatus : byte {CREATED = 0, STREAMING, STOPPED, ERROR}
 
 table Subscribe {
-    status:StreamStatus = CREATED;
 }
 
 table UnSubscribe {
@@ -13,6 +12,7 @@ table UnSubscribe {
 
 table Status {
     status:StreamStatus = CREATED;
+    subscribe_count:int;
 }
 
 table BroadCast {
