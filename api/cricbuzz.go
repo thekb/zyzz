@@ -63,8 +63,8 @@ type Score struct {
 	InningsDetail InningsDetail `xml:"inngsdetail" json:"InningsDetail"`
 	BattingTeam   BattingTeam `xml:"btTm" json:"BattingTeam"`
 	BowlingTeam   BowlingTeam `xml:"blgTm" json:"BowlingTeam"`
-	Batsmen       Batsmen `xml:"btsmn" json:"Batsmen"`
-	Bowler        Bowler `xml:"" json:"Bowler"`
+	Batsmen       []Batsmen `xml:"btsmn" json:"Batsmen"`
+	Bowler        []Bowler `xml:"blrs" json:"Bowler"`
 }
 
 type InningsDetail struct {
