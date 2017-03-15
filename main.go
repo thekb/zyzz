@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gopkg.in/kataras/iris.v6/adaptors/sessions/sessiondb/redis/service"
+	rservice "gopkg.in/kataras/iris.v6/adaptors/sessions/sessiondb/redis/service"
 	"gopkg.in/kataras/iris.v6/adaptors/sessions/sessiondb/redis"
 	"gopkg.in/kataras/iris.v6/adaptors/httprouter"
 	"gopkg.in/kataras/iris.v6/adaptors/sessions"
@@ -12,6 +12,14 @@ import (
 	"fmt"
 	"github.com/thekb/zyzz/control"
 	"gopkg.in/kataras/iris.v6/middleware/logger"
+	"flag"
+)
+
+const (
+	REDIS_NETWORK = "127.0.0.1:6379"
+	SESSION_PREFIX = "zyzz"
+	CERT_PATH = "/etc/letsencrypt/live/shortpitch.live/fullchain.pem"
+	KEY_PATH = "/etc/letsencrypt/live/shortpitch.live/privkey.pem"
 )
 
 func sessionMiddleware(ctx *iris.Context) {
@@ -23,25 +31,34 @@ func sessionMiddleware(ctx *iris.Context) {
 }
 
 func main() {
+	// run in prod mode
+	prod := flag.Bool("prod", false, "run in prod mode")
+	flag.Parse()
+
+	// get db instance
 	d, err := db.GetDB()
 	if err != nil {
 		fmt.Println("unable to connect to db:", err)
 		return
 	}
-
-	mySessions := sessions.New(sessions.Config{
-		Cookie: "shortsess",
+	// setup sessions
+	session := sessions.New(sessions.Config{
+		Cookie: "sid",
 		DecodeCookie: false,
 		Expires: 0,
 		CookieLength: 32,
 		DisableSubdomainPersistence: false,
 	})
-	config := service.DefaultConfig()
-	mySessions.UseDatabase(redis.New(config))
+	session.UseDatabase(redis.New(rservice.Config{
+		Network: REDIS_NETWORK,
+		Prefix: SESSION_PREFIX,
+
+	}))
+
 	app := iris.New()
 	app.Adapt(iris.DevLogger())
 	app.Adapt(httprouter.New())
-	app.Adapt(mySessions)
+	app.Adapt(session)
 
 	/*
 	app.StaticWeb("/css","/Users/abalusu/Projects/shortpitch/dist/css")
@@ -59,6 +76,7 @@ func main() {
 	app.StaticWeb("/jspm_packages","/opt/shortpitch/UI/dist/jspm_packages")
 	app.StaticWeb("/home","/opt/shortpitch/UI/dist/")
 	app.HandleFunc("GET", "/", func(ctx *iris.Context) { ctx.Redirect("/home", 302) })
+
 	customLogger := logger.New(logger.Config{
 		// Status displays status code
 		Status: true,
@@ -110,6 +128,12 @@ func main() {
 
 	app.Handle("GET", "/control", &control.Control{DB:d})
 
-	app.Listen(":8000")
-
+	// if running in production mode listen on tls
+	if prod {
+		fmt.Println("running in prod mode")
+		app.ListenTLS("0.0.0.0:443", CERT_PATH, KEY_PATH)
+	} else {
+		fmt.Println("running in dev mode")
+		app.Listen(":8000")
+	}
 }

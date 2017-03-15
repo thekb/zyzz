@@ -82,8 +82,8 @@ func (ctx *ControlContext) SetupSubSocket() error {
 		fmt.Println("unable to dial to sub socket:", err)
 		return err
 	}
-	// set receive deadline to 50 ms
-	err = ctx.subSocket.SetOption(mangos.OptionRecvDeadline, time.Millisecond * 50)
+	// set receive deadline to 10 ms
+	err = ctx.subSocket.SetOption(mangos.OptionRecvDeadline, time.Millisecond * 10)
 	if err != nil {
 		fmt.Println("unable to set recv deadline:", err)
 	}
@@ -134,7 +134,9 @@ func (ctx *ControlContext) CopyToWS() {
 		default:
 			out, err = ctx.subSocket.Recv()
 			if err != nil {
-				//fmt.Println("unable to receive from sub socket:", err)
+				if err != mangos.ErrRecvTimeout {
+					fmt.Println("unable to receive from sub socket:", err)
+				}
 				continue
 			}
 			// first 2 bytes contain topic and delimiter
