@@ -129,7 +129,7 @@ func main() {
 	app.Handle("GET", "/control", &control.Control{DB:d})
 
 	// if running in production mode listen on tls
-	if prod {
+	if *prod {
 		fmt.Println("running in prod mode")
 		app.ListenTLS("0.0.0.0:443", CERT_PATH, KEY_PATH)
 	} else {
