@@ -13,6 +13,7 @@ import (
 	"github.com/thekb/zyzz/control"
 	"gopkg.in/kataras/iris.v6/middleware/logger"
 	"flag"
+	"crypto/tls"
 )
 
 const (
@@ -131,7 +132,14 @@ func main() {
 	// if running in production mode listen on tls
 	if *prod {
 		fmt.Println("running in prod mode")
-		app.ListenTLS("0.0.0.0:443", CERT_PATH, KEY_PATH)
+		cer, err := tls.LoadX509KeyPair(CERT_PATH, KEY_PATH)
+ 		if err != nil {
+ 			fmt.Println("unable to load keypair:", err)
+ 			return
+ 		}
+ 		tlsConfig := &tls.Config{Certificates: []tls.Certificate{cer}}
+		listener, err := tls.Listen("tcp4", "0.0.0.0:443", tlsConfig)
+		app.Serve(listener)
 	} else {
 		fmt.Println("running in dev mode")
 		app.Listen(":8000")
