@@ -209,7 +209,7 @@ func (ctx *ControlContext) pushMessage(header, in []byte) {
 // send message to client
 func (ctx *ControlContext) sendMessageToClient(msg []byte) {
 	// if stream has already started send in loopback channel
-	if ctx.streamStarted {
+	if !ctx.streamStarted {
 		ctx.loopBack <- msg
 	} else {
 		ctx.WebSocket.WriteMessage(ws.BinaryMessage, msg)
@@ -316,11 +316,11 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			}
 			models.IncrementStreamSubscriberCount(db, streamId)
 			fmt.Println("incremented subscriber count")
-			ctx.streamStarted = true
 			go ctx.CopyToWS()
 			fmt.Println("started copy to ws goroutine")
 			ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, nil))
 			ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
+			ctx.streamStarted = true
 			fmt.Println("sent status to client")
 		}
 	case m.MessageUnSubscribe:
