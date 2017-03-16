@@ -285,7 +285,7 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 		}
 		// TODO should we cleanup after stop ?
 	case m.MessageFrame:
-		fmt.Println("handling stream frame")
+		//fmt.Println("handling stream frame")
 		if ctx.streamStarted {
 			ctx.pushMessage(FrameHeader, msg)
 		}
@@ -330,7 +330,7 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 		ctx.closeSubSocket <- true
 		ctx.pushSocket.Close()
 	case m.MessageComment:
-		fmt.Println("handling stream comment")
+		//fmt.Println("handling stream comment")
 		if ctx.streamStarted {
 			ctx.pushMessage(CommentHeader, msg)
 		}
