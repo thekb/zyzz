@@ -27,9 +27,6 @@ type Streams struct {
 }
 
 func (s *Streams) GetStream(streamId string) (*Stream, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-
 	stream, ok := s.streams[streamId]
 	if !ok {
 		return nil, STREAM_NOT_FOUND
