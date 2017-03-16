@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	REDIS_NETWORK = "127.0.0.1:6379"
+	REDIS_NETWORK = "tcp"
+	REDIS_ADDRESS = "127.0.0.1:6379"
 	SESSION_PREFIX = "zyzz"
 	CERT_PATH = "/etc/letsencrypt/live/shortpitch.live/fullchain.pem"
 	KEY_PATH = "/etc/letsencrypt/live/shortpitch.live/privkey.pem"
@@ -52,8 +53,7 @@ func main() {
 	})
 	session.UseDatabase(redis.New(rservice.Config{
 		Network: REDIS_NETWORK,
-		Prefix: SESSION_PREFIX,
-
+		Addr: REDIS_ADDRESS,
 	}))
 
 	app := iris.New()
