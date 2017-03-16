@@ -319,7 +319,7 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			go ctx.CopyToWS()
 			fmt.Println("started copy to ws goroutine")
 			ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, nil))
-			ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
+			//ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
 			ctx.streamStarted = true
 			fmt.Println("sent status to client")
 		}
