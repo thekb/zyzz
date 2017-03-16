@@ -176,7 +176,7 @@ func (ctx *ControlContext) getStreamResponse(streamId, eventId string, err error
 	case STREAM_NOT_ALLOWED:
 		m.ResponseAddStatus(ctx.builder, m.ResponseStatusNotAllowed)
 	default:
-		m.ResponseAddStatus(ctx.builder, m.ResponseStatusOK)
+		m.ResponseAddStatus(ctx.builder, m.ResponseStatusError)
 	}
 
 	responseOffset := m.ResponseEnd(ctx.builder)
@@ -224,7 +224,7 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 	streamId := string(streamMessage.StreamId())
 	eventId := string(streamMessage.EventId())
 
-	stream, err = GetStream(streamId)
+	stream, err = StreamMap.GetStream(streamId)
 	if err != nil {
 		fmt.Println("unable to get stream:", err)
 		ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, err))

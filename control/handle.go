@@ -7,6 +7,7 @@ import (
 	ws "github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/kataras/iris.v6"
+	"github.com/thekb/zyzz/db/models"
 )
 
 type Control struct {
@@ -56,9 +57,9 @@ func (c *Control) Serve(ctx *iris.Context) {
 	}
 
 	// once the upgrade is successful create control context
-	controlContext := &ControlContext{}
-	controlContext.Init(wsc, userId)
-	defer controlContext.Close()
+	cc := &ControlContext{}
+	cc.Init(wsc, userId)
+	defer cc.Close()
 	var in []byte
 	// read from websocket and push to stream
 	for {
@@ -75,7 +76,13 @@ func (c *Control) Serve(ctx *iris.Context) {
 			continue
 		}
 
-		controlContext.HandleStreamMessage(c.DB, in)
+		cc.HandleStreamMessage(c.DB, in)
 	}
 
+	// if websocket closes and stream is still active
+	if cc.streamStarted && cc.publish {
+		if cc.currentStream != nil {
+			models.SetStreamStatus(c.DB, cc.currentStream.StreamId, models.STATUS_STOPPED)
+		}
+	}
 }

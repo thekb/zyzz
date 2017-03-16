@@ -50,7 +50,10 @@ func (cs *CreateStream) Serve(ctx *iris.Context) {
 		return
 	}
 	// setup stream sockets
-	err = control.CreateStream(stream.ShortId)
+	err = control.StreamMap.CreateStream(stream.ShortId)
+	if err != nil {
+		fmt.Println("unable to setup stream:", err)
+	}
 	stream, _ = models.GetStreamForId(cs.DB, id)
 	ctx.JSON(iris.StatusOK, &stream)
 	return

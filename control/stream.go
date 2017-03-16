@@ -21,14 +21,51 @@ var (
 	STREAM_NOT_ALLOWED = errors.New("Stream not allowed")
 )
 
+type Streams struct {
+	m       sync.Mutex
+	streams map[string]*Stream
+}
+
+func (s *Streams) GetStream(streamId string) (*Stream, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	stream, ok := s.streams[streamId]
+	if !ok {
+		return nil, STREAM_NOT_FOUND
+	}
+	return stream, nil
+}
+
+func (s *Streams) CreateStream(streamId string) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	stream, ok := s.streams[streamId]
+	if !ok {
+		fmt.Println("existing stream not found")
+		// stream not found
+		stream = &Stream{StreamId:streamId}
+		err := stream.Init()
+		s.streams[streamId] = stream
+		// setup required sockets for stream
+		if err != nil {
+			fmt.Println("Unable to initilaze stream:", err)
+			return STREAM_INIT_ERROR
+		}
+	} else {
+		return STREAM_ALREADY_EXISTS
+	}
+	return nil
+}
+
 type Stream struct {
-	m              sync.Mutex
+	StreamId       string
 	pubSock        mangos.Socket // used to publish data to clients
 	pullSock       mangos.Socket // used to pull data from clients
 	PublishSockURL string        // url for publish socket
 	PullSockURL    string        // url for pull socket
-	PublishUser    int        // userid for user who is publishing
-
+	PublishUser    int           // userid for user who is publishing
 }
 
 func (s *Stream)Init() error {
@@ -88,36 +125,8 @@ func (s *Stream) copy() {
 	}
 }
 
-
-var streams map[string]*Stream
+var StreamMap Streams
 
 func init() {
-	streams = make(map[string]*Stream)
-}
-
-func CreateStream(streamId string) error {
-	stream, ok := streams[streamId]
-	if !ok {
-		fmt.Println("existing stream not found")
-		// stream not found
-		stream = &Stream{}
-		err := stream.Init()
-		streams[streamId] = stream
-		// setup required sockets for stream
-		if err != nil {
-			fmt.Println("Unable to initilaze stream:", err)
-			return STREAM_INIT_ERROR
-		}
-	} else {
-		return STREAM_ALREADY_EXISTS
-	}
-	return nil
-}
-
-func GetStream(streamId string) (*Stream, error) {
-	stream, ok := streams[streamId]
-	if !ok {
-		return nil, STREAM_NOT_FOUND
-	}
-	return stream, nil
+	StreamMap = Streams{streams:make(map[string]*Stream)}
 }
