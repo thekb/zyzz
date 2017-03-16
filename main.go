@@ -43,6 +43,7 @@ func main() {
 		fmt.Println("unable to connect to db:", err)
 		return
 	}
+	api.StartEventTickers(d)
 	// setup sessions
 	session := sessions.New(sessions.Config{
 		Cookie: "sid",

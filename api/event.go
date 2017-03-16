@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"bytes"
 	"encoding/json"
+	"github.com/jmoiron/sqlx"
 )
 
 type GetEvent struct {
@@ -111,7 +112,7 @@ func (ce *UpdateEvent) Serve(ctx *iris.Context) {
 		close_chan, ok := EventChannels[event.ShortId]
 		if !ok {
 			EventChannels[event.ShortId] = make(chan bool)
-        		ticker := time.NewTicker(2 * time.Second).C
+			ticker := time.NewTicker(2 * time.Second).C
 			go scoreTicker(close_chan, ticker, event.ShortId, event.MatchUrl)
 		}
 	}
@@ -219,4 +220,24 @@ func scoreTicker(close_chan chan bool, ticker <- chan time.Time, eventId string,
 		}
 	}
 	r.Close()
+}
+
+func StartEventTickers(db *sqlx.DB) {
+	events, err := models.GetEvents(db)
+	if err != nil {
+		fmt.Println("Error occured while getting events", err)
+		return
+	}
+	for i := 0; i < len(events); i++ {
+		event := events[i]
+		if event.RunningNow == 1 {
+			close_chan, ok := EventChannels[event.ShortId]
+			if !ok {
+				EventChannels[event.ShortId] = make(chan bool)
+				ticker := time.NewTicker(2 * time.Second).C
+				fmt.Println("calling the ticker")
+				go scoreTicker(close_chan, ticker, event.ShortId, event.MatchUrl)
+			}
+		}
+	}
 }
