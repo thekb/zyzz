@@ -107,6 +107,13 @@ func (ce *UpdateEvent) Serve(ctx *iris.Context) {
 		close_chan <- true
 		ticker := make(chan time.Time)
 		go scoreTicker(close_chan, ticker, event.ShortId, event.MatchUrl)
+	} else {
+		close_chan, ok := EventChannels[event.ShortId]
+		if !ok {
+			EventChannels[event.ShortId] = make(chan bool)
+        		ticker := time.NewTicker(2 * time.Second).C
+			go scoreTicker(close_chan, ticker, event.ShortId, event.MatchUrl)
+		}
 	}
 	//go scoreTicker(ce.CC, ce.DB)
 	event, _ = models.GetEventForId(ce.DB, event.Id)
