@@ -80,9 +80,7 @@ func (c *Control) Serve(ctx *iris.Context) {
 	}
 
 	// if websocket closes and stream is still active
-	if cc.streamStarted && cc.publish {
-		if cc.currentStream != nil {
-			models.SetStreamStatus(c.DB, cc.currentStream.StreamId, models.STATUS_STOPPED)
-		}
+	if cc.active && cc.publish && cc.stream != nil {
+		models.SetStreamStatus(c.DB, cc.stream.StreamId, models.STATUS_STOPPED)
 	}
 }

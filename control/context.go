@@ -16,51 +16,51 @@ import (
 )
 
 var (
-	PauseHeader   = []byte("p|")
-	FrameHeader   = []byte("f|")
-	StopHeader    = []byte("s|")
+	PauseHeader = []byte("p|")
+	FrameHeader = []byte("f|")
+	StopHeader = []byte("s|")
 	CommentHeader = []byte("c|")
 )
 
 type ControlContext struct {
-	WebSocket      *ws.Conn      // pointer to control websocket connection
-	currentStream  *Stream       // pointer to current stream
-	publisher      bool          // is user tied to the control context publisher
-	UserId         int           // user id of the user tied to control context
-	loopBack       chan []byte   // for sending messages directly back to client
-	publish        bool          // is the user publishing to stream
-	pushSocket     mangos.Socket // socket for pushing messages
-	subSocket      mangos.Socket // socket for subscribing messages
-	closeSubSocket chan bool     // channel for closing sub socket
-	streamStarted  bool          // if stream is active on current control context
-	builder        *fb.Builder   // flat buffer builder for context
+	WebSocket *ws.Conn      // pointer to control websocket connection
+	stream    *Stream       // pointer to current stream
+	publisher bool          // is user tied to the control context publisher
+	UserId    int           // user id of the user tied to control context
+	loopBack  chan []byte   // for sending messages directly back to client
+	publish   bool          // is the user publishing to stream
+	push      mangos.Socket // socket for pushing messages
+	sub       mangos.Socket // socket for subscribing messages
+	closeCopy chan bool     // channel for closing sub socket
+	active    bool          // if stream is active on current control context
+	builder   *fb.Builder   // flat buffer builder for context
 }
 
 // closes control context
 func (ctx *ControlContext) Close() {
-	ctx.closeSubSocket <- true
-	close(ctx.closeSubSocket)
+	ctx.closeCopy <- true
+	close(ctx.closeCopy)
 	close(ctx.loopBack)
-	ctx.pushSocket.Close()
+	ctx.push.Close()
 }
 
 func (ctx *ControlContext) Init(conn *ws.Conn, userId int) {
 	ctx.WebSocket = conn
 	ctx.UserId = userId
 	ctx.builder = fb.NewBuilder(0)
-	ctx.closeSubSocket = make(chan bool)
+	ctx.closeCopy = make(chan bool)
 	ctx.loopBack = make(chan []byte, 1)
 }
 
 // setup new push socket for current stream
 func (ctx *ControlContext) SetupPushSocket() error {
 	var err error
-	if ctx.pushSocket, err = push.NewSocket(); err != nil {
+	if ctx.push, err = push.NewSocket(); err != nil {
 		fmt.Println("unable to get new push socket:", err)
 		return err
 	}
-	ctx.pushSocket.AddTransport(tcp.NewTransport())
-	if err = ctx.pushSocket.Dial(ctx.currentStream.PullSockURL); err != nil {
+	ctx.push.AddTransport(tcp.NewTransport())
+	if err = ctx.push.Dial(ctx.stream.PullSockURL); err != nil {
 		fmt.Println("unable to dial to push socket:", err)
 		return err
 	}
@@ -71,25 +71,25 @@ func (ctx *ControlContext) SetupPushSocket() error {
 func (ctx *ControlContext) SetupSubSocket() error {
 	var err error
 
-	if ctx.subSocket, err = sub.NewSocket(); err != nil {
+	if ctx.sub, err = sub.NewSocket(); err != nil {
 		fmt.Println("unable to get new sub socket:", err)
 		return err
 	}
 
-	ctx.subSocket.AddTransport(tcp.NewTransport())
-	err = ctx.subSocket.Dial(ctx.currentStream.PublishSockURL)
+	ctx.sub.AddTransport(tcp.NewTransport())
+	err = ctx.sub.Dial(ctx.stream.PublishSockURL)
 	if err != nil {
 		fmt.Println("unable to dial to sub socket:", err)
 		return err
 	}
 	// set receive deadline to 10 ms
-	err = ctx.subSocket.SetOption(mangos.OptionRecvDeadline, time.Millisecond * 10)
+	err = ctx.sub.SetOption(mangos.OptionRecvDeadline, time.Millisecond * 10)
 	if err != nil {
 		fmt.Println("unable to set recv deadline:", err)
 	}
 	if ctx.publish {
 		// publisher will subscribe to only stream comments
-		err = ctx.subSocket.SetOption(mangos.OptionSubscribe, []byte("c"))
+		err = ctx.sub.SetOption(mangos.OptionSubscribe, []byte("c"))
 		if err != nil {
 			fmt.Println("unable to set subscribe option:", err)
 			return err
@@ -97,7 +97,7 @@ func (ctx *ControlContext) SetupSubSocket() error {
 
 	} else {
 		// subscribe will subscribe to all messages
-		err = ctx.subSocket.SetOption(mangos.OptionSubscribe, []byte(""))
+		err = ctx.sub.SetOption(mangos.OptionSubscribe, []byte(""))
 		if err != nil {
 			fmt.Println("unable to set subscribe option:", err)
 			return err
@@ -110,16 +110,16 @@ func (ctx *ControlContext) SetupSubSocket() error {
 func (ctx *ControlContext) CopyToWS() {
 	var out []byte
 	var err error
-	defer ctx.subSocket.Close()
+	defer ctx.sub.Close()
 
 	COPY:
 	for {
 		select {
 		// close go routine
-		case <- ctx.closeSubSocket:
+		case <-ctx.closeCopy:
 			fmt.Println("received close to copy")
 			break COPY
-		case out = <- ctx.loopBack:
+		case out = <-ctx.loopBack:
 			fmt.Println("received message in loopback", out)
 			err = ctx.WebSocket.WriteMessage(ws.BinaryMessage, out)
 			fmt.Println("sent loopback message on websocket")
@@ -132,7 +132,7 @@ func (ctx *ControlContext) CopyToWS() {
 				}
 			}
 		default:
-			out, err = ctx.subSocket.Recv()
+			out, err = ctx.sub.Recv()
 			if err != nil {
 				if err != mangos.ErrRecvTimeout {
 					fmt.Println("unable to receive from sub socket:", err)
@@ -156,8 +156,8 @@ func (ctx *ControlContext) CopyToWS() {
 }
 
 func (ctx *ControlContext) UserAllowedToPublish() bool {
-	if ctx.currentStream.PublishUser != ctx.UserId {
-		fmt.Println("stream publish user, user", ctx.currentStream.PublishUser, ctx.UserId)
+	if ctx.stream.PublishUser != ctx.UserId {
+		fmt.Println("stream publish user, user", ctx.stream.PublishUser, ctx.UserId)
 		return false
 	}
 	return true
@@ -200,7 +200,7 @@ func (ctx *ControlContext) pushMessage(header, in []byte) {
 	var msg []byte
 	msg = append(msg, header...)
 	msg = append(msg, in...)
-	err := ctx.pushSocket.Send(msg)
+	err := ctx.push.Send(msg)
 	if err != nil {
 		fmt.Println("unable to push message:", err)
 	}
@@ -209,7 +209,7 @@ func (ctx *ControlContext) pushMessage(header, in []byte) {
 // send message to client
 func (ctx *ControlContext) sendMessageToClient(msg []byte) {
 	// if stream has already started send in loopback channel
-	if !ctx.streamStarted {
+	if ctx.active {
 		ctx.loopBack <- msg
 	} else {
 		ctx.WebSocket.WriteMessage(ws.BinaryMessage, msg)
@@ -237,63 +237,71 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 	case m.MessageBroadCast:
 		fmt.Println("handling stream broadcast")
 		// if user is allowed to broadcast on this stream
-		if ctx.currentStream == nil || (ctx.currentStream != stream && ctx.UserAllowedToPublish()) {
-			ctx.currentStream = stream
+		if ctx.stream == nil && ctx.UserAllowedToPublish() {
+			ctx.active = false
+			// set stream
+			ctx.stream = stream
 			// set publish true
 			ctx.publish = true
-
 			// setup push socket
 			err = ctx.SetupPushSocket()
 			if err != nil {
 				fmt.Println("unable to setup push socket:", err)
 				// send to loopback if stream has started
 				ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, err))
-
+				return
 			}
-
+			// setup sub socket
 			err = ctx.SetupSubSocket()
 			if err != nil {
 				fmt.Println("unable to setup sub socket:", err)
 				ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, err))
+				return
 			}
-			if ctx.streamStarted {
-				// close existing sub socket
-				ctx.closeSubSocket <- true
-			}
-			// start background write subscribe socket to web socket
-			ctx.streamStarted = true
+			// update stream status
 			models.SetStreamStatus(db, streamId, models.STATUS_STREAMING)
-			go ctx.CopyToWS()
-			// send ok back
+			// send response back to client
 			ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, nil))
+			// start background copy subscribe socket to web socket
+			ctx.active = true
+			go ctx.CopyToWS()
 		} else {
 			fmt.Println("user not allowed to broadcast")
 			ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, err))
 
 		}
-		//TODO what to do with duplicate broadcast messages ?
+	//TODO what to do with duplicate broadcast messages ?
 	case m.MessagePause:
 		fmt.Println("handling stream pause")
-		if ctx.streamStarted {
+		if ctx.active {
 			ctx.pushMessage(PauseHeader, msg)
 		}
 	case m.MessageStop:
 		fmt.Println("handling stream stop")
-		if ctx.streamStarted {
+		if ctx.active {
+			fmt.Println("stream already started cleaning up")
 			models.SetStreamStatus(db, streamId, models.STATUS_STOPPED)
+			// send stop message to subscribers
 			ctx.pushMessage(StopHeader, msg)
+			ctx.closeCopy <- true
+			ctx.push.Close()
+			ctx.stream = nil
 		}
-		// TODO should we cleanup after stop ?
+	// TODO should we cleanup after stop ?
 	case m.MessageFrame:
 		//fmt.Println("handling stream frame")
-		if ctx.streamStarted {
+		if ctx.active {
 			ctx.pushMessage(FrameHeader, msg)
+			fmt.Println("stream already active, cleaning up")
+			ctx.push.Close()
+			ctx.closeCopy <- true
+			ctx.stream = nil
 		}
 	case m.MessageSubscribe:
 		fmt.Println("handling stream subscribe")
-		if ctx.currentStream == nil || ctx.currentStream != stream {
-			fmt.Println("stream nil or different")
-			ctx.currentStream = stream
+		if ctx.stream == nil {
+			fmt.Println("stream not active")
+			ctx.stream = stream
 			ctx.publish = false
 			// setup push socket
 			err = ctx.SetupPushSocket()
@@ -308,30 +316,26 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 				ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, err))
 			}
 			fmt.Println("sub socket setup successfully")
-			if ctx.streamStarted {
-				// close existing sub socket
-				fmt.Println("stream already started, closing exising sub socket")
-				ctx.closeSubSocket <- true
-
-			}
 			models.IncrementStreamSubscriberCount(db, streamId)
 			fmt.Println("incremented subscriber count")
+			ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, nil))
+			ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
+			fmt.Println("sent status to client")
+			ctx.active = true
 			go ctx.CopyToWS()
 			fmt.Println("started copy to ws goroutine")
-			ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, nil))
-			//ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
-			ctx.streamStarted = true
-			fmt.Println("sent status to client")
 		}
 	case m.MessageUnSubscribe:
 		fmt.Println("handling unsubscribe")
-		ctx.currentStream = nil
-		ctx.streamStarted = false
-		ctx.closeSubSocket <- true
-		ctx.pushSocket.Close()
+		if ctx.active {
+			ctx.stream = nil
+			ctx.active = false
+			ctx.closeCopy <- true
+			ctx.push.Close()
+		}
 	case m.MessageComment:
 		//fmt.Println("handling stream comment")
-		if ctx.streamStarted {
+		if ctx.active {
 			ctx.pushMessage(CommentHeader, msg)
 		}
 
