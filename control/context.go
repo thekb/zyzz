@@ -237,11 +237,17 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 	case m.MessageBroadCast:
 		fmt.Println("handling stream broadcast")
 		// if user is allowed to broadcast on this stream
-		if ctx.stream == nil && ctx.UserAllowedToPublish() {
+		if ctx.stream == nil {
+			fmt.Println("no active stream")
 			ctx.active = false
 			// set stream
 			ctx.stream = stream
 			// set publish true
+			if !ctx.UserAllowedToPublish() {
+				fmt.Println("user not allowed to broadcast")
+				ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, STREAM_NOT_ALLOWED))
+				return
+			}
 			ctx.publish = true
 			// setup push socket
 			err = ctx.SetupPushSocket()
@@ -265,10 +271,6 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			// start background copy subscribe socket to web socket
 			ctx.active = true
 			go ctx.CopyToWS()
-		} else {
-			fmt.Println("user not allowed to broadcast")
-			ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, err))
-
 		}
 	//TODO what to do with duplicate broadcast messages ?
 	case m.MessagePause:
@@ -292,10 +294,6 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 		//fmt.Println("handling stream frame")
 		if ctx.active {
 			ctx.pushMessage(FrameHeader, msg)
-			fmt.Println("stream already active, cleaning up")
-			ctx.push.Close()
-			ctx.closeCopy <- true
-			ctx.stream = nil
 		}
 	case m.MessageSubscribe:
 		fmt.Println("handling stream subscribe")

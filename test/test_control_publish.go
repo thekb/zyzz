@@ -24,7 +24,7 @@ const (
 func main() {
 	var err error
 	var wsRead []byte
-	streamId := "nRSFYNx--"
+	streamId := "PzCvF6TCC"
 	eventId := "pfYX3Z1C-"
 	b := fb.NewBuilder(1024)
 	pa.Initialize()
@@ -41,7 +41,7 @@ func main() {
 	url := url.URL{Scheme:"ws", Host: "localhost:8000", Path:"/control", }
 
 	var header = make(http.Header)
-	header.Set("X-User-Id", "1")
+	header.Set("X-User-Id", "0")
 
 	c, _, err := ws.DefaultDialer.Dial(url.String(), header)
 
@@ -65,6 +65,7 @@ func main() {
 		if streamMessage.MessageType() == m.MessageResponse {
 			response := new(m.Response)
 			response.Init(table.Bytes, table.Pos)
+			fmt.Println(response.Status())
 			if response.Status() != m.ResponseStatusOK {
 				fmt.Println("status not ok,", response.Status())
 				c.Close()
@@ -92,7 +93,13 @@ func main() {
 					comment.Init(table.Bytes, table.Pos)
 					fmt.Println(string(comment.Text()))
 					fmt.Println(string(comment.UserName()))
+				} else
+				if message.MessageType() == m.MessageResponse {
+					response := new(m.Response)
+					response.Init(table.Bytes, table.Pos)
+					fmt.Println(response.Status())
 				}
+
 			}
 		}
 
@@ -106,7 +113,7 @@ func main() {
 	encoder, err = opus.NewEncoder(SAMPLE_RATE, INPUT_CHANNELS, opus.AppAudio)
 
 	fmt.Println("sending stream")
-	timeout := time.After(time.Second * 120)
+	timeout := time.After(time.Second * 4)
 	ticker := time.Tick(time.Millisecond * FRAMES_SIZE)
 
 	L:
@@ -116,7 +123,6 @@ func main() {
 			fmt.Println("after timeout")
 			break L
 		case <- ticker:
-			fmt.Println("reading stream")
 			stream.Read()
 			n, err = encoder.Encode(streamBuffer, encoderBuffer)
 			if err != nil {
