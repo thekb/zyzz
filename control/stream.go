@@ -34,7 +34,7 @@ func (s *Streams) GetStream(streamId string) (*Stream, error) {
 	return stream, nil
 }
 
-func (s *Streams) CreateStream(streamId string, userId string) error {
+func (s *Streams) CreateStream(streamId string, userId int) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 
