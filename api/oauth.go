@@ -22,7 +22,8 @@ type ProviderIndex struct {
 
 func init() {
 	goth.UseProviders(
-		facebook.New("1359686897424077", "6acdd8af96d5d0ab7a83c023fda10049", "http://localhost:8000/auth/facebook/callback"),
+		//facebook.New("1359686897424077", "6acdd8af96d5d0ab7a83c023fda10049", "http://localhost:8000/auth/facebook/callback"),
+		facebook.New("1359686897424077", "6acdd8af96d5d0ab7a83c023fda10049", "https://shortpitch.live/auth/facebook/callback"),
 	)
 }
 
