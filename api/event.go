@@ -12,6 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+
 type GetEvent struct {
 	Common
 }
@@ -73,8 +74,7 @@ func (ce *CreateEvent) Serve(ctx *iris.Context) {
 		return
 	}
 	EventChannels[event.ShortId] = make(chan bool)
-	ticker := time.NewTicker(2 * time.Second).C
-	go scoreTicker(EventChannels[event.ShortId], ticker, event.ShortId, event.MatchUrl)
+	go scoreTicker(ce.R, EventChannels[event.ShortId], event.ShortId, event.MatchUrl)
 	event, _ = models.GetEventForId(ce.DB, id)
 	ctx.JSON(iris.StatusOK, Response{Data:event})
 	return
@@ -101,19 +101,14 @@ func (ce *UpdateEvent) Serve(ctx *iris.Context) {
 		return
 	}
 	fmt.Println("running now", event.RunningNow)
+	close, ok := EventChannels[event.ShortId]
 	if event.RunningNow == 0 {
 		fmt.Println("in the if loop")
-		close_chan := EventChannels[event.ShortId]
-		//ticker := make(chan time.Time)
-		close_chan <- true
-		ticker := make(chan time.Time)
-		go scoreTicker(close_chan, ticker, event.ShortId, event.MatchUrl)
+		close <- true
 	} else {
-		close_chan, ok := EventChannels[event.ShortId]
 		if !ok {
 			EventChannels[event.ShortId] = make(chan bool)
-			ticker := time.NewTicker(2 * time.Second).C
-			go scoreTicker(close_chan, ticker, event.ShortId, event.MatchUrl)
+			go scoreTicker(ce.R, close, event.ShortId, event.MatchUrl)
 		}
 	}
 	//go scoreTicker(ce.CC, ce.DB)
@@ -152,15 +147,7 @@ func (ges *GetEventStreams) Serve(ctx *iris.Context) {
 
 func (gcs *GetCricketScores) Serve(ctx *iris.Context) {
 	event_shortId := ctx.GetString(SHORT_ID)
-	r := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0, // use default DB
-	})
-	pong, err := r.Ping().Result()
-	fmt.Println(pong, err)
-	redisEntries, err := r.Get(event_shortId).Result()
-	r.Close()
+	redisEntries, err := gcs.R.Get(event_shortId).Result()
 	if err != nil {
 		fmt.Println("No data for event", event_shortId)
 	}
@@ -176,53 +163,47 @@ func (gcs *GetCricketScores) Serve(ctx *iris.Context) {
 	return
 }
 
-func scoreTicker(close_chan chan bool, ticker <- chan time.Time, eventId string, DataPath string) {
-	//cric_url := "http://synd.cricbuzz.com/j2me/1.0/livematches.xml"
-	cric_url := fmt.Sprintf("%s%s", DataPath, "commentary.xml")
-	r := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:      0, // use default DB
-	})
-	_, err := r.Ping().Result()
-	if err != nil {
-		fmt.Println("No redis connection found")
-	}
-	ForLoop:
+func scoreTicker(r *redis.Client, close chan bool, eventId string, DataPath string) {
+	cricURL := fmt.Sprintf("%s%s", DataPath, "commentary.xml")
+	// initialize ticker
+	ticker := time.Tick(time.Second * 2)
+
+	Loop:
 	for {
 		select {
-		case <-close_chan:
+		case <- close:
 			fmt.Println("i am in case close chan")
-			break ForLoop
-		case <-ticker:
-			req, _ := http.NewRequest("GET", cric_url, bytes.NewBufferString(""))
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			if err != nil {
-				fmt.Println("Response from cric server failed ", err)
-				continue
-			}
-			defer resp.Body.Close()
-			status := resp.StatusCode
-			if status == 200 {
-				MatchDetails, err := ReadMatchData(resp.Body)
-				match, err := json.Marshal(MatchDetails)
-				if err == nil {
-
-					err = r.Set(eventId, match, 0).Err()
-					if err != nil {
-						fmt.Println("Error occured while setting in redis", err)
-					}
-				}
-			}
-		default:
-			continue
+			break Loop
+		case <- ticker:
+			updateScore(r, cricURL, eventId)
 		}
 	}
-	r.Close()
 }
 
-func StartEventTickers(db *sqlx.DB) {
+func updateScore(r *redis.Client, cricURL, eventId string) {
+	req, _ := http.NewRequest("GET", cricURL, bytes.NewBufferString(""))
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	// close response body
+	defer resp.Body.Close()
+	if err != nil {
+		fmt.Println("Response from cric server failed:", err)
+		return
+	}
+	if resp.StatusCode == http.StatusOK {
+		MatchDetails, err := ReadMatchData(resp.Body)
+		match, err := json.Marshal(MatchDetails)
+		if err == nil {
+
+			err = r.Set(eventId, match, 0).Err()
+			if err != nil {
+				fmt.Println("Error occured while setting in redis", err)
+			}
+		}
+	}
+}
+
+func StartEventTickers(db *sqlx.DB, r *redis.Client) {
 	events, err := models.GetEvents(db)
 	if err != nil {
 		fmt.Println("Error occured while getting events", err)
@@ -231,12 +212,11 @@ func StartEventTickers(db *sqlx.DB) {
 	for i := 0; i < len(events); i++ {
 		event := events[i]
 		if event.RunningNow == 1 {
-			close_chan, ok := EventChannels[event.ShortId]
+			close, ok := EventChannels[event.ShortId]
 			if !ok {
 				EventChannels[event.ShortId] = make(chan bool)
-				ticker := time.NewTicker(2 * time.Second).C
 				fmt.Println("calling the ticker")
-				go scoreTicker(close_chan, ticker, event.ShortId, event.MatchUrl)
+				go scoreTicker(r, close, event.ShortId, event.MatchUrl)
 			}
 		}
 	}

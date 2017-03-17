@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/jmoiron/sqlx"
 	"github.com/ventu-io/go-shortid"
+	"gopkg.in/redis.v5"
 )
 
 const (
@@ -21,6 +22,7 @@ func init () {
 
 type Common struct {
 	DB *sqlx.DB
+	R *redis.Client
 }
 
 type Response struct {

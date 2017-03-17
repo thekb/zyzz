@@ -2,10 +2,11 @@ package main
 
 import (
 	rservice "gopkg.in/kataras/iris.v6/adaptors/sessions/sessiondb/redis/service"
-	"gopkg.in/kataras/iris.v6/adaptors/sessions/sessiondb/redis"
+	sredis "gopkg.in/kataras/iris.v6/adaptors/sessions/sessiondb/redis"
 	"gopkg.in/kataras/iris.v6/adaptors/httprouter"
 	"gopkg.in/kataras/iris.v6/adaptors/sessions"
 	"gopkg.in/kataras/iris.v6/middleware/pprof"
+	"gopkg.in/redis.v5"
 	"github.com/thekb/zyzz/stream"
 	"github.com/thekb/zyzz/api"
 	"gopkg.in/kataras/iris.v6"
@@ -47,7 +48,20 @@ func main() {
 		fmt.Println("unable to connect to db:", err)
 		return
 	}
-	api.StartEventTickers(d)
+	// initialize redis pool
+	r := redis.NewClient(&redis.Options{
+		Network: REDIS_NETWORK,
+		Addr: REDIS_ADDRESS,
+		PoolSize: 100,
+	})
+	_, err = r.Ping().Result()
+	if err != nil {
+		fmt.Println("unable to connect to redis:", err)
+		return
+	}
+	// start event tickers in background
+	api.StartEventTickers(d, r)
+
 	// setup sessions
 	session := sessions.New(sessions.Config{
 		Cookie: "sid",
@@ -56,7 +70,7 @@ func main() {
 		CookieLength: 32,
 		DisableSubdomainPersistence: false,
 	})
-	session.UseDatabase(redis.New(rservice.Config{
+	session.UseDatabase(sredis.New(rservice.Config{
 		Network: REDIS_NETWORK,
 		Addr: REDIS_ADDRESS,
 	}))
@@ -98,39 +112,39 @@ func main() {
 	// auth api
 	authapi := app.Party("/auth")
 	authapi.Get("/:provider", api.Authenticate)
-	authapi.Handle("GET", "/:provider/callback", &api.FacebookCallback{api.Common{DB:d}})
+	authapi.Handle("GET", "/:provider/callback", &api.FacebookCallback{api.Common{DB:d, R:r}})
 
 	// user api
 	userApi := app.Party("/api/user", sessionMiddleware)
-	userApi.Handle("GET", "/", &api.CreateUser{api.Common{DB:d}})
-	userApi.Handle("POST", "/:id", &api.GetUser{api.Common{DB:d}})
-	userApi.Handle("GET", "/:id/streams", &api.GetUserStream{api.Common{DB:d}})
-	userApi.Handle("GET", "/:id/streams/current", &api.GetCurrentUserStream{api.Common{DB:d}})
+	userApi.Handle("GET", "/", &api.CreateUser{api.Common{DB:d, R:r}})
+	userApi.Handle("POST", "/:id", &api.GetUser{api.Common{DB:d, R:r}})
+	userApi.Handle("GET", "/:id/streams", &api.GetUserStream{api.Common{DB:d, R:r}})
+	userApi.Handle("GET", "/:id/streams/current", &api.GetCurrentUserStream{api.Common{DB:d, R:r}})
 
 
 	// event api no auth
 	eventApiNoAuth := app.Party("/api/event")
-	eventApiNoAuth.Handle("GET", "/", &api.GetEvents{api.Common{DB:d}})
-	eventApiNoAuth.Handle("GET", "/:id/stream", &api.GetEventStreams{api.Common{DB:d}})
+	eventApiNoAuth.Handle("GET", "/", &api.GetEvents{api.Common{DB:d, R:r}})
+	eventApiNoAuth.Handle("GET", "/:id/stream", &api.GetEventStreams{api.Common{DB:d, R:r}})
 
 	// event api auth
 	eventApi := app.Party("/api/event", sessionMiddleware)
-	eventApi.Handle("POST", "/", &api.CreateEvent{api.Common{DB:d}})
-	eventApi.Handle("PUT", "/:id", &api.UpdateEvent{api.Common{DB:d}})
-	eventApi.Handle("POST", "/:id/stream", &api.CreateStream{api.Common{DB:d}})
+	eventApi.Handle("POST", "/", &api.CreateEvent{api.Common{DB:d, R:r}})
+	eventApi.Handle("PUT", "/:id", &api.UpdateEvent{api.Common{DB:d, R:r}})
+	eventApi.Handle("POST", "/:id/stream", &api.CreateStream{api.Common{DB:d, R:r}})
 
 	//stream server api
 	streamServerApi := app.Party("/api/streamserver")
-	streamServerApi.Handle("POST", "/", &api.CreateStreamServer{api.Common{DB:d}})
-	streamServerApi.Handle("GET", "/:id", &api.GetStreamServer{api.Common{DB:d}})
+	streamServerApi.Handle("POST", "/", &api.CreateStreamServer{api.Common{DB:d, R:r}})
+	streamServerApi.Handle("GET", "/:id", &api.GetStreamServer{api.Common{DB:d, R:r}})
 
 	streamParty := app.Party("/stream", sessionMiddleware)
-	streamParty.Handle("GET", "/ws/publish/:id", &stream.PublishStream{api.Common{DB:d}})
-	streamParty.Handle("GET", "/ws/subscribe/:id", &stream.WebSocketSubscriber{api.Common{DB:d}})
-	streamParty.Handle("GET", "/http/subscribe/:id", &stream.SubscribeStream{api.Common{DB:d}})
+	streamParty.Handle("GET", "/ws/publish/:id", &stream.PublishStream{api.Common{DB:d, R:r}})
+	streamParty.Handle("GET", "/ws/subscribe/:id", &stream.WebSocketSubscriber{api.Common{DB:d, R:r}})
+	streamParty.Handle("GET", "/http/subscribe/:id", &stream.SubscribeStream{api.Common{DB:d, R:r}})
 
 	cricbuzzParty := app.Party("/api/cricbuzz")
-	cricbuzzParty.Handle("GET", "/:id", &api.GetCricketScores{api.Common{DB:d}})
+	cricbuzzParty.Handle("GET", "/:id", &api.GetCricketScores{api.Common{DB:d, R:r}})
 
 	app.Handle("GET", "/control", &control.Control{DB:d})
 
