@@ -5,6 +5,7 @@ import (
 	"gopkg.in/kataras/iris.v6/adaptors/sessions/sessiondb/redis"
 	"gopkg.in/kataras/iris.v6/adaptors/httprouter"
 	"gopkg.in/kataras/iris.v6/adaptors/sessions"
+	"gopkg.in/kataras/iris.v6/middleware/pprof"
 	"github.com/thekb/zyzz/stream"
 	"github.com/thekb/zyzz/api"
 	"gopkg.in/kataras/iris.v6"
@@ -35,6 +36,9 @@ func sessionMiddleware(ctx *iris.Context) {
 func main() {
 	// run in prod mode
 	prod := flag.Bool("prod", false, "run in prod mode")
+	// enable profiling
+	debug := flag.Bool("debug", false, "enable profiling")
+
 	flag.Parse()
 
 	// get db instance
@@ -129,6 +133,11 @@ func main() {
 	cricbuzzParty.Handle("GET", "/:id", &api.GetCricketScores{api.Common{DB:d}})
 
 	app.Handle("GET", "/control", &control.Control{DB:d})
+
+	if *debug{
+		app.Get("/debug/pprof/*action", pprof.New())
+	}
+
 
 	// if running in production mode listen on tls
 	if *prod {
