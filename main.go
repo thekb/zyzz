@@ -135,6 +135,7 @@ func main() {
 	app.Handle("GET", "/control", &control.Control{DB:d})
 
 	if *debug{
+		fmt.Println("enabling profling")
 		app.Get("/debug/pprof/*action", pprof.New())
 	}
 
