@@ -34,7 +34,7 @@ func (s *Streams) GetStream(streamId string) (*Stream, error) {
 	return stream, nil
 }
 
-func (s *Streams) CreateStream(streamId string) error {
+func (s *Streams) CreateStream(streamId string, userId string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -42,7 +42,7 @@ func (s *Streams) CreateStream(streamId string) error {
 	if !ok {
 		fmt.Println("existing stream not found")
 		// stream not found
-		stream = &Stream{StreamId:streamId}
+		stream = &Stream{StreamId:streamId, PublishUser:userId}
 		err := stream.Init()
 		s.streams[streamId] = stream
 		// setup required sockets for stream
@@ -58,8 +58,8 @@ func (s *Streams) CreateStream(streamId string) error {
 
 type Stream struct {
 	StreamId       string
-	pubSock        mangos.Socket // used to publish data to clients
-	pullSock       mangos.Socket // used to pull data from clients
+	pub            mangos.Socket // used to publish data to clients
+	pull           mangos.Socket // used to pull data from clients
 	PublishSockURL string        // url for publish socket
 	PullSockURL    string        // url for pull socket
 	PublishUser    int           // userid for user who is publishing
@@ -68,12 +68,12 @@ type Stream struct {
 func (s *Stream)Init() error {
 	var err error
 	// setup publish socket
-	s.pubSock, err = pub.NewSocket()
+	s.pub, err = pub.NewSocket()
 	if err != nil {
 		fmt.Println("unable to create new pub socket:", err)
 		return err
 	}
-	s.pubSock.AddTransport(tcp.NewTransport())
+	s.pub.AddTransport(tcp.NewTransport())
 	PubOpenPort, err := GetFreePort()
 	if err != nil {
 		fmt.Println("unable to get open tcp port:", err)
@@ -81,21 +81,21 @@ func (s *Stream)Init() error {
 	}
 	s.PublishSockURL = fmt.Sprintf(STREAM_TRANSPORT_URL_FORMAT, "127.0.0.1", PubOpenPort)
 	// timeout sending a message after 10 milliseconds
-	err = s.pubSock.Listen(s.PublishSockURL)
+	err = s.pub.Listen(s.PublishSockURL)
 	if err != nil {
 		fmt.Println("unable to listen at stream transport url:", err)
 		return err
 	}
 	// setup pull socket
-	s.pullSock, err = pull.NewSocket()
+	s.pull, err = pull.NewSocket()
 	if err != nil {
 		fmt.Println("unable to create new pull socket")
 		return err
 	}
-	s.pullSock.AddTransport(tcp.NewTransport())
+	s.pull.AddTransport(tcp.NewTransport())
 	pullOpenPort, err := GetFreePort()
 	s.PullSockURL = fmt.Sprintf(STREAM_TRANSPORT_URL_FORMAT, "127.0.0.1", pullOpenPort)
-	err = s.pullSock.Listen(s.PullSockURL)
+	err = s.pull.Listen(s.PullSockURL)
 	if err != nil {
 		fmt.Println("unable to listen at stream transport url:", err)
 		return err
@@ -110,12 +110,12 @@ func (s *Stream) copy() {
 	var err error
 	var msg []byte
 	for {
-		msg, err = s.pullSock.Recv()
+		msg, err = s.pull.Recv()
 		if err != nil {
 			fmt.Println("unable to receive message from pull:", err)
 			continue
 		}
-		err = s.pubSock.Send(msg)
+		err = s.pub.Send(msg)
 		if err != nil {
 			fmt.Println("unable to send message to pub:, err")
 		}

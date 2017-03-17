@@ -50,7 +50,7 @@ func (cs *CreateStream) Serve(ctx *iris.Context) {
 		return
 	}
 	// setup stream sockets
-	err = control.StreamMap.CreateStream(stream.ShortId)
+	err = control.StreamMap.CreateStream(stream.ShortId, stream.CreatorId)
 	if err != nil {
 		fmt.Println("unable to setup stream:", err)
 	}
