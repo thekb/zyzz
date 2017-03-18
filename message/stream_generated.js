@@ -2,8 +2,7 @@
 
 /**
  * @const
- * @namespace
- */
+*/
 var message = message || {};
 
 /**
@@ -48,7 +47,8 @@ message.Message = {
   Subscribe: 6,
   Response: 7,
   Status: 8,
-  UnSubscribe: 9
+  UnSubscribe: 9,
+  ActiveListeners: 10
 };
 
 /**
@@ -482,14 +482,6 @@ message.Frame.prototype.frameLength = function() {
 };
 
 /**
- * @returns {Uint8Array}
- */
-message.Frame.prototype.frameArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 10);
-  return offset ? new Uint8Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
-};
-
-/**
  * @param {flatbuffers.Builder} builder
  */
 message.Frame.startFrame = function(builder) {
@@ -646,6 +638,73 @@ message.Comment.endComment = function(builder) {
 /**
  * @constructor
  */
+message.ActiveListeners = function() {
+  /**
+   * @type {flatbuffers.ByteBuffer}
+   */
+  this.bb = null;
+
+  /**
+   * @type {number}
+   */
+  this.bb_pos = 0;
+};
+
+/**
+ * @param {number} i
+ * @param {flatbuffers.ByteBuffer} bb
+ * @returns {message.ActiveListeners}
+ */
+message.ActiveListeners.prototype.__init = function(i, bb) {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {message.ActiveListeners=} obj
+ * @returns {message.ActiveListeners}
+ */
+message.ActiveListeners.getRootAsActiveListeners = function(bb, obj) {
+  return (obj || new message.ActiveListeners).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @returns {number}
+ */
+message.ActiveListeners.prototype.activeListeners = function() {
+  var offset = this.bb.__offset(this.bb_pos, 4);
+  return offset ? this.bb.readInt32(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ */
+message.ActiveListeners.startActiveListeners = function(builder) {
+  builder.startObject(1);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {number} activeListeners
+ */
+message.ActiveListeners.addActiveListeners = function(builder, activeListeners) {
+  builder.addFieldInt32(0, activeListeners, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @returns {flatbuffers.Offset}
+ */
+message.ActiveListeners.endActiveListeners = function(builder) {
+  var offset = builder.endObject();
+  return offset;
+};
+
+/**
+ * @constructor
+ */
 message.Response = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
@@ -785,7 +844,7 @@ message.StreamMessage.prototype.message = function(obj) {
  */
 message.StreamMessage.prototype.timestamp = function() {
   var offset = this.bb.__offset(this.bb_pos, 12);
-  return offset ? this.bb.readInt64(this.bb_pos + offset) : this.bb.createLong(0, 0);
+  return offset ? this.bb.readInt64(this.bb_pos + offset) : flatbuffers.Long.ZERO;
 };
 
 /**
@@ -832,7 +891,7 @@ message.StreamMessage.addMessage = function(builder, messageOffset) {
  * @param {flatbuffers.Long} timestamp
  */
 message.StreamMessage.addTimestamp = function(builder, timestamp) {
-  builder.addFieldInt64(4, timestamp, builder.createLong(0, 0));
+  builder.addFieldInt64(4, timestamp, flatbuffers.Long.ZERO);
 };
 
 /**

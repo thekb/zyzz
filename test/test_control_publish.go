@@ -190,7 +190,7 @@ func GetStreamStopMessage(b *fb.Builder, streamId, eventId string) []byte {
 	b.Finish(streamMessageOffset)
 	return b.FinishedBytes()
 }
-
+/*
 func GetCommentMessage(b *fb.Builder, streamId, eventId, userName, text string) []byte {
 	b.Reset()
 
@@ -215,7 +215,7 @@ func GetCommentMessage(b *fb.Builder, streamId, eventId, userName, text string) 
 	b.Finish(streamMessageOffset)
 	return b.FinishedBytes()
 }
-
+*/
 func GetStreamBroadCastMessage(b *fb.Builder, streamId, eventId string) []byte {
 	b.Reset()
 	streamIdOffset := b.CreateString(streamId)

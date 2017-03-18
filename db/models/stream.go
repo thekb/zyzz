@@ -187,7 +187,7 @@ func StopStream(d *sqlx.DB, short_id string) error {
 	return err
 }
 
-func IncrementActiveListenersCount(d *sqlx.DB, short_id string) {
+func IncrementActiveListenersCount(d *sqlx.DB, short_id string) error {
 	err := db.Update(d, INCREMENT_ACTIVE_LISTENERS_COUNT, short_id)
 	if err != nil {
 		fmt.Println("unable to update active listeners count:", err)
@@ -195,7 +195,7 @@ func IncrementActiveListenersCount(d *sqlx.DB, short_id string) {
 	return err
 }
 
-func DecrementActiveListenersCount(d *sqlx.DB, short_id string) {
+func DecrementActiveListenersCount(d *sqlx.DB, short_id string) error {
 	err := db.Update(d, DECREMENT_ACTIVE_LISTENERS_COUNT, short_id)
 	if err != nil {
 		fmt.Println("unable to update active listeners count:", err)

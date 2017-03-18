@@ -39,6 +39,10 @@ table Comment {
     text:string;
 }
 
+table ActiveListeners {
+    active_listeners:int;
+}
+
 table Response {
     status:ResponseStatus = OK;
 }
@@ -53,7 +57,8 @@ union Message {
     Subscribe,
     Response,
     Status,
-    UnSubscribe
+    UnSubscribe,
+    ActiveListeners
 }
 
 table StreamMessage {

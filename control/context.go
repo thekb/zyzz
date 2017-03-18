@@ -20,6 +20,7 @@ var (
 	FrameHeader = []byte("f|")
 	StopHeader = []byte("s|")
 	CommentHeader = []byte("c|")
+	ActiveListenerHeader = []byte("a|")
 )
 
 type ControlContext struct {
@@ -90,6 +91,7 @@ func (ctx *ControlContext) SetupSubSocket() error {
 	if ctx.publish {
 		// publisher will subscribe to only stream comments
 		err = ctx.sub.SetOption(mangos.OptionSubscribe, []byte("c"))
+		err = ctx.sub.SetOption(mangos.OptionSubscribe, []byte("a"))
 		if err != nil {
 			fmt.Println("unable to set subscribe option:", err)
 			return err
@@ -321,6 +323,8 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
 			fmt.Println("sent status to client")
 			ctx.active = true
+			actMsg := ctx.GetStreamActilveListenersMessage(db, streamId, eventId)
+			ctx.pushMessage(ActiveListenerHeader, actMsg)
 			go ctx.CopyToWS()
 			fmt.Println("started copy to ws goroutine")
 		}
@@ -364,6 +368,32 @@ func (ctx *ControlContext) getStreamStatus(db *sqlx.DB, eventId, streamId string
 	m.StreamMessageAddStreamId(ctx.builder, streamIdOffset)
 	m.StreamMessageAddMessageType(ctx.builder, m.MessageStatus)
 	m.StreamMessageAddMessage(ctx.builder, statusOffset)
+	m.StreamMessageAddTimestamp(ctx.builder, GetCurrentTimeInMilli())
+	streamMessageOffset := m.StreamMessageEnd(ctx.builder)
+	ctx.builder.Finish(streamMessageOffset)
+	return ctx.builder.FinishedBytes()
+}
+
+func (ctx *ControlContext) GetStreamActilveListenersMessage(db *sqlx.DB, streamId, eventId string) []byte {
+	ctx.builder.Reset()
+
+	stream, err := models.GetStreamForShortId(db, streamId)
+	if err != nil {
+		fmt.Println("unable to get stream:", err)
+		return nil
+	}
+	eventIdOffset := ctx.builder.CreateString(eventId)
+	streamIdOffset := ctx.builder.CreateString(streamId)
+
+	m.ActiveListenersStart(ctx.builder)
+	m.ActiveListenersAddActiveListeners(ctx.builder, int32(stream.ActiveListeners))
+	streamALOffset := m.ActiveListenersEnd(ctx.builder)
+
+	m.StreamMessageStart(ctx.builder)
+	m.StreamMessageAddEventId(ctx.builder, eventIdOffset)
+	m.StreamMessageAddStreamId(ctx.builder, streamIdOffset)
+	m.StreamMessageAddMessageType(ctx.builder, m.MessageActiveListeners)
+	m.StreamMessageAddMessage(ctx.builder, streamALOffset)
 	m.StreamMessageAddTimestamp(ctx.builder, GetCurrentTimeInMilli())
 	streamMessageOffset := m.StreamMessageEnd(ctx.builder)
 	ctx.builder.Finish(streamMessageOffset)
