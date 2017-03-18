@@ -323,20 +323,22 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
 			fmt.Println("sent status to client")
 			ctx.active = true
+			actMsg := ctx.GetStreamActilveListenersMessage(db, streamId, eventId)
+			ctx.pushMessage(ActiveListenerHeader, actMsg)
 			go ctx.CopyToWS()
 			fmt.Println("started copy to ws goroutine")
 		}
 	case m.MessageUnSubscribe:
 		fmt.Println("handling unsubscribe")
 		if ctx.active {
+			models.DecrementActiveListenersCount(db, streamId)
+			actMsg := ctx.GetStreamActilveListenersMessage(db, streamId, eventId)
+			ctx.pushMessage(ActiveListenerHeader, actMsg)
 			ctx.stream = nil
 			ctx.active = false
 			ctx.closeCopy <- true
 			ctx.push.Close()
 		}
-		models.DecrementActiveListenersCount(db, streamId)
-		actMsg := ctx.GetStreamActilveListenersMessage(db, streamId, eventId)
-		ctx.pushMessage(ActiveListenerHeader, actMsg)
 	case m.MessageComment:
 		//fmt.Println("handling stream comment")
 		if ctx.active {
