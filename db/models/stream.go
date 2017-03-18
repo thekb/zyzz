@@ -52,6 +52,14 @@ const (
 				SET subscriber_count = subscriber_count + 1
 				WHERE short_id = $1;`
 
+	INCREMENT_ACTIVE_LISTENERS_COUNT = `UPDATE stream
+				SET active_listeners = active_listeners + 1
+				WHERE short_id = $1;`
+
+	DECREMENT_ACTIVE_LISTENERS_COUNT = `UPDATE stream
+				SET active_listeners = active_listeners - 1
+				WHERE short_id = $1;`
+
 	STOP_STREAM = `UPDATE stream A
 				SET A.status=$1, A.ended_at=CURRENT_TIMESTAMP
 				WHERE A.short_id=$2;`
@@ -68,6 +76,7 @@ type Stream struct {
 	PublishUrl      string `db:"publish_url" json:"publish_url"`
 	SubscribeUrl    string `db:"subscribe_url" json:"subscribe_url"`
 	SubscriberCount int `db:"subscriber_count" json:"subscriber_count"`
+	ActiveListeners int `db:"active_listeners" json:"active_listeners"`
 	CreatorId       int `db:"creator_id" json:"creator_id"`
 	StreamServerId  int `db:"stream_server_id" json:"stream_server_id"`
 	TransportUrl    string `db:"transport_url" json:"transport_url"`
@@ -174,6 +183,22 @@ func StopStream(d *sqlx.DB, short_id string) error {
 	err := db.Update(d, STOP_STREAM, STATUS_STOPPED, short_id)
 	if err != nil {
 		fmt.Println("unable to stop stream:", err)
+	}
+	return err
+}
+
+func IncrementActiveListenersCount(d *sqlx.DB, short_id string) {
+	err := db.Update(d, INCREMENT_ACTIVE_LISTENERS_COUNT, short_id)
+	if err != nil {
+		fmt.Println("unable to update active listeners count:", err)
+	}
+	return err
+}
+
+func DecrementActiveListenersCount(d *sqlx.DB, short_id string) {
+	err := db.Update(d, DECREMENT_ACTIVE_LISTENERS_COUNT, short_id)
+	if err != nil {
+		fmt.Println("unable to update active listeners count:", err)
 	}
 	return err
 }

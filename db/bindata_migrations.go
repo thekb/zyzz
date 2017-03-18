@@ -4,6 +4,7 @@
 // db/migrations/1-initial.sql
 // db/migrations/2-userchanges.sql
 // db/migrations/3-event.sql
+// db/migrations/4-stream-activelisteners.sql
 // DO NOT EDIT!
 
 package db
@@ -146,7 +147,27 @@ func dbMigrations3EventSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "db/migrations/3-event.sql", size: 1080, mode: os.FileMode(420), modTime: time.Unix(1489242856, 0)}
+	info := bindataFileInfo{name: "db/migrations/3-event.sql", size: 1080, mode: os.FileMode(420), modTime: time.Unix(1489266434, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _dbMigrations4StreamActivelistenersSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x74\xcc\xb1\x0d\x02\x31\x0c\x05\xd0\x3e\x53\xfc\x1e\x9d\x44\x7f\x2d\x2b\x50\x23\x73\x31\x28\x92\x63\x47\xce\x0f\xac\x4f\x4b\x01\x0b\xbc\x6d\xc3\xa9\xb7\x67\x0a\x15\xd7\x51\xc4\xa8\x09\xca\xdd\x14\x93\xa9\xd2\x8b\xd4\x8a\x23\x6c\x75\x87\x1c\x6c\x2f\xbd\x59\x9b\x54\xd7\x9c\x68\x4e\x78\x10\xbe\xcc\x50\xf5\x21\xcb\x88\xf3\x5e\xca\x37\x7b\x89\xb7\xff\x82\x6b\xc6\xf8\x27\xef\x9f\x00\x00\x00\xff\xff\xd7\x36\xcd\xf0\x98\x00\x00\x00")
+
+func dbMigrations4StreamActivelistenersSqlBytes() ([]byte, error) {
+	return bindataRead(
+		_dbMigrations4StreamActivelistenersSql,
+		"db/migrations/4-stream-activelisteners.sql",
+	)
+}
+
+func dbMigrations4StreamActivelistenersSql() (*asset, error) {
+	bytes, err := dbMigrations4StreamActivelistenersSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "db/migrations/4-stream-activelisteners.sql", size: 152, mode: os.FileMode(420), modTime: time.Unix(1489843670, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -207,6 +228,7 @@ var _bindata = map[string]func() (*asset, error){
 	"db/migrations/1-initial.sql": dbMigrations1InitialSql,
 	"db/migrations/2-userchanges.sql": dbMigrations2UserchangesSql,
 	"db/migrations/3-event.sql": dbMigrations3EventSql,
+	"db/migrations/4-stream-activelisteners.sql": dbMigrations4StreamActivelistenersSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -255,6 +277,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"1-initial.sql": &bintree{dbMigrations1InitialSql, map[string]*bintree{}},
 			"2-userchanges.sql": &bintree{dbMigrations2UserchangesSql, map[string]*bintree{}},
 			"3-event.sql": &bintree{dbMigrations3EventSql, map[string]*bintree{}},
+			"4-stream-activelisteners.sql": &bintree{dbMigrations4StreamActivelistenersSql, map[string]*bintree{}},
 		}},
 	}},
 }}

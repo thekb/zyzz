@@ -315,6 +315,7 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			}
 			fmt.Println("sub socket setup successfully")
 			models.IncrementStreamSubscriberCount(db, streamId)
+			models.IncrementActiveListenersCount(db, streamId)
 			fmt.Println("incremented subscriber count")
 			ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, nil))
 			ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
@@ -331,6 +332,7 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			ctx.closeCopy <- true
 			ctx.push.Close()
 		}
+		models.DecrementActiveListenersCount(db, streamId)
 	case m.MessageComment:
 		//fmt.Println("handling stream comment")
 		if ctx.active {
