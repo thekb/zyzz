@@ -35,10 +35,18 @@ type ControlContext struct {
 	closeCopy chan bool     // channel for closing sub socket
 	active    bool          // if stream is active on current control context
 	builder   *fb.Builder   // flat buffer builder for context
+	streamId  string 	// StreamId for stream
+	eventId	  string	// EventId of event
+	db 	  *sqlx.DB	// pointer to the db instance
 }
 
 // closes control context
 func (ctx *ControlContext) Close() {
+	if ctx.publish == false {
+		models.DecrementActiveListenersCount(ctx.db, ctx.streamId)
+		actMsg := ctx.GetStreamActilveListenersMessage(ctx.db, ctx.streamId, ctx.eventId)
+		ctx.pushMessage(ActiveListenerHeader, actMsg)
+	}
 	ctx.closeCopy <- true
 	close(ctx.closeCopy)
 	close(ctx.loopBack)
@@ -266,6 +274,9 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 				ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, err))
 				return
 			}
+			ctx.streamId = streamId
+			ctx.eventId = eventId
+			ctx.db = db
 			// update stream status
 			models.SetStreamStatus(db, streamId, models.STATUS_STREAMING)
 			// send response back to client
@@ -303,6 +314,9 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			fmt.Println("stream not active")
 			ctx.stream = stream
 			ctx.publish = false
+			ctx.streamId = streamId
+			ctx.eventId = eventId
+			ctx.db = db
 			// setup push socket
 			err = ctx.SetupPushSocket()
 			if err != nil {
@@ -331,9 +345,9 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 	case m.MessageUnSubscribe:
 		fmt.Println("handling unsubscribe")
 		if ctx.active {
-			models.DecrementActiveListenersCount(db, streamId)
-			actMsg := ctx.GetStreamActilveListenersMessage(db, streamId, eventId)
-			ctx.pushMessage(ActiveListenerHeader, actMsg)
+			//models.DecrementActiveListenersCount(db, streamId)
+			//actMsg := ctx.GetStreamActilveListenersMessage(db, streamId, eventId)
+			//ctx.pushMessage(ActiveListenerHeader, actMsg)
 			ctx.stream = nil
 			ctx.active = false
 			ctx.closeCopy <- true
