@@ -8,18 +8,19 @@ import (
 )
 
 const (
-	CREATE_USER = `INSERT INTO user (short_id, name, description, email, nickname, avatarurl, fbid, access_token)
-			VALUES (:short_id, :name, :description, :email, :nickname, :avatarurl, :fbid, :access_token);`
-	UPDATE_USER = `UPDATE user set name=:name, description=:description, email=:email, nickname=:nickname,
-	 		avatarurl=:avatarurl, access_token=:access_token WHERE user.short_id=:short_id;`
-	GET_USER_SHORT_ID = `SELECT A.* FROM user A
+	CREATE_USER = `INSERT INTO users (short_id, name, description, email, nickname, avatarurl, fbid, access_token)
+			VALUES (:short_id, :name, :description, :email, :nickname, :avatarurl, :fbid, :access_token)
+			returning id;`
+	UPDATE_USER = `UPDATE users set name=:name, description=:description, email=:email, nickname=:nickname,
+	 		avatarurl=:avatarurl, access_token=:access_token WHERE users.short_id=:short_id;`
+	GET_USER_SHORT_ID = `SELECT A.* FROM users A
 			WHERE A.short_id=$1;`
-	GET_USER_ID = `SELECT A.* FROM user A
+	GET_USER_ID = `SELECT A.* FROM users A
 			WHERE A.id=$1;`
-	GET_DEFAULT_USER = `SELECT A.* FROM user A
+	GET_DEFAULT_USER = `SELECT A.* FROM users A
 	 		ORDER BY A.id
 	 		ASC LIMIT 1;`
-	GET_USER_FBID = `SELECT A.* FROM user A WHERE A.fbid=$1`
+	GET_USER_FBID = `SELECT A.* FROM users A WHERE A.fbid=$1`
 )
 
 type User struct {

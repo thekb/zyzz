@@ -27,7 +27,7 @@ create table stream(
     creator_id int not null,
     transport_url text not null,
     event_id string not null,
-    foreign key(creator_id) references user(id),
+    foreign key(creator_id) references users(id),
     foreign key(stream_server_id) references stream_server(id),
     foreign key(event_id) references event(short_id)
 );

@@ -3,14 +3,16 @@ package db
 import (
 	"github.com/rubenv/sql-migrate"
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
 const (
-	DRIVER_NAME = "sqlite3"
-	DB_NAME = "/opt/zyzz/db/zyzz.sqlite"
+	DRIVER_NAME = "postgres"
+	DB_NAME = "zyzz"
+	DB_USER = "postgres"
+	DB_PASSWORD = "melcow"
 )
 
 var sqlxDB *sqlx.DB
@@ -22,13 +24,16 @@ func GetDB() (*sqlx.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-		sqlxDB, err = sqlx.Connect(DRIVER_NAME, DB_NAME)
+		dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",DB_USER, DB_PASSWORD, DB_NAME)
+		sqlxDB, err = sqlx.Connect(DRIVER_NAME, dbinfo)
 		if err != nil {
 			return nil, err
 		}
 		//set open connections to 1 to prevent db errors when accessing multiple goroutines
 		sqlxDB.SetMaxIdleConns(1)
 		sqlxDB.SetMaxOpenConns(1)
+		err = sqlxDB.Ping()
+		fmt.Println(err)
 		return sqlxDB, err
 	}
 	return sqlxDB, nil
@@ -41,8 +46,8 @@ func RunMigrations() error {
 		AssetDir: AssetDir,
 		Dir: "db/migrations",
 	}
-
-	db, err := sql.Open(DRIVER_NAME, DB_NAME)
+	dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",DB_USER, DB_PASSWORD, DB_NAME)
+	db, err := sql.Open(DRIVER_NAME, dbinfo)
 	if err != nil {
 		fmt.Println("unable to open database:", err)
 		return err
@@ -119,13 +124,18 @@ func InsertStructs(db *sqlx.DB, query string, objects []interface{}) error {
 
 //wrapper for insert struct
 func InsertStruct(db *sqlx.DB, query string, object interface{}) (int64, error) {
-	result, err := db.NamedExec(query, object)
+	stmt, err := db.PrepareNamed(query)
+	if err != nil {
+		fmt.Println("error occured while preparing insert statement ", err)
+		return 0, nil
+	}
+	var id int64
+	err = stmt.Get(&id, object)
 	if err != nil {
 		fmt.Println("unable to insert struct:", err)
 		return 0, err
 	}
-	id, _ := result.LastInsertId()
-	return id, nil
+	return id, err
 }
 
 //wrapper for update

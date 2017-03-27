@@ -114,9 +114,9 @@ type Bowler struct {
 	Id      string `xml:"id,attr" json:"-"`
 	SName   string `xml:"sName,attr" json:"SNames"`
 	Runs    string `xml:"r,attr" json:"Runs"`
-	Wickets string `xml:"b,wkts" json:"Wickets"`
-	Overs   string `xml:"ovrs" json:"Overs"`
-	Maidens string `xml:"mdns" json:"Maidens"`
+	Wickets string `xml:"wkts,attr" json:"Wickets"`
+	Overs   string `xml:"ovrs,attr" json:"Overs"`
+	Maidens string `xml:"mdns,attr" json:"Maidens"`
 }
 
 

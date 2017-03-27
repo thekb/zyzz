@@ -14,7 +14,7 @@ const (
 	STATUS_ERROR
 
 	CREATE_STREAM_SERVER = `INSERT INTO stream_server (short_id, name, hostname, internal_ip, external_ip)
-				VALUES (:short_id, :name, :hostname, :internal_ip, :external_ip);`
+				VALUES (:short_id, :name, :hostname, :internal_ip, :external_ip) returning id;`
 
 	GET_STREAM_SERVER_SHORT_ID = `SELECT A.* FROM stream_server A
 				WHERE A.short_id=$1;`
@@ -33,7 +33,8 @@ const (
 				VALUES (
 				:short_id, :name, :description,
 				:publish_url, :subscribe_url, :transport_url,
-				:stream_server_id, :creator_id, :event_id);`
+				:stream_server_id, :creator_id, :event_id)
+				returning id;`
 
 	GET_STREAM_SHORT_ID = `SELECT A.* FROM stream A
 				WHERE A.short_id=$1;`

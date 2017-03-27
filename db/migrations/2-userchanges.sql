@@ -1,13 +1,13 @@
 -- +migrate Up
-alter table user add column email text;
-alter table user add column nickname text;
-alter table user add column avatarurl text;
-alter table user add column fbid text;
-alter table user add column access_token text;
+alter table users add column email text;
+alter table users add column nickname text;
+alter table users add column avatarurl text;
+alter table users add column fbid text;
+alter table users add column access_token text;
 
 -- +migrate Down
-alter table user drop column email;
-alter table user drop column nickname;
-alter table user drop column avatarurl;
-alter table user drop column fbid;
-alter table user drop column access_token;
+alter table users drop column email;
+alter table users drop column nickname;
+alter table users drop column avatarurl;
+alter table users drop column fbid;
+alter table users drop column access_token;

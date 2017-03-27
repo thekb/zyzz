@@ -8,7 +8,7 @@ create table stream_server(
     external_ip text not null
 );
 
-create table user(
+create table users(
     id integer primary key autoincrement,
     short_id text not null,
     name text not null,
@@ -20,5 +20,5 @@ create table user(
 
 
 -- +migrate Down
-drop table user;
+drop table users;
 drop table stream_server;

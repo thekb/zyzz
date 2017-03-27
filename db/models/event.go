@@ -9,7 +9,8 @@ import (
 
 const (
 	CREATE_EVENT = `INSERT INTO event (name, description, short_id, starttime, endtime, running_now, matchid, matchurl)
-			VALUES (:name, :description, :short_id, :starttime, :endtime, :running_now, :matchid, :matchurl);`
+			VALUES (:name, :description, :short_id, :starttime, :endtime, :running_now, :matchid, :matchurl)
+			returning id;`
 	UPDATE_EVENT = `UPDATE event set name=:name, description=:description, starttime=:starttime,
 			endtime=:endtime, running_now=:running_now, matchid=:matchid, matchurl=:matchurl
 			WHERE event.short_id=:short_id`
@@ -34,7 +35,6 @@ type Event struct {
 	MatchId     int `db:"matchid" json:"matchid"`
 	MatchUrl    string `db:"matchurl" json:"matchurl"`
 }
-
 
 func CreateEvent(d *sqlx.DB, event *Event) (int64, error) {
 	id, err := db.InsertStruct(d, CREATE_EVENT, event)
