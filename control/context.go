@@ -44,7 +44,7 @@ type ControlContext struct {
 func (ctx *ControlContext) Close() {
 	if ctx.publish == false {
 		models.DecrementActiveListenersCount(ctx.db, ctx.streamId)
-		actMsg := ctx.GetStreamActilveListenersMessage(ctx.db, ctx.streamId, ctx.eventId)
+		actMsg := ctx.GetStreamActiveListenersMessage(ctx.db, ctx.streamId, ctx.eventId)
 		ctx.pushMessage(ActiveListenerHeader, actMsg)
 	}
 	ctx.closeCopy <- true
@@ -337,7 +337,7 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			ctx.sendMessageToClient(ctx.getStreamStatus(db, eventId, streamId))
 			fmt.Println("sent status to client")
 			ctx.active = true
-			actMsg := ctx.GetStreamActilveListenersMessage(db, streamId, eventId)
+			actMsg := ctx.GetStreamActiveListenersMessage(db, streamId, eventId)
 			ctx.pushMessage(ActiveListenerHeader, actMsg)
 			go ctx.CopyToWS()
 			fmt.Println("started copy to ws goroutine")
@@ -390,7 +390,7 @@ func (ctx *ControlContext) getStreamStatus(db *sqlx.DB, eventId, streamId string
 	return ctx.builder.FinishedBytes()
 }
 
-func (ctx *ControlContext) GetStreamActilveListenersMessage(db *sqlx.DB, streamId, eventId string) []byte {
+func (ctx *ControlContext) GetStreamActiveListenersMessage(db *sqlx.DB, streamId, eventId string) []byte {
 	ctx.builder.Reset()
 
 	stream, err := models.GetStreamForShortId(db, streamId)

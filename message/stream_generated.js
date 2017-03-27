@@ -2,7 +2,8 @@
 
 /**
  * @const
-*/
+ * @namespace
+ */
 var message = message || {};
 
 /**
@@ -482,6 +483,14 @@ message.Frame.prototype.frameLength = function() {
 };
 
 /**
+ * @returns {Uint8Array}
+ */
+message.Frame.prototype.frameArray = function() {
+  var offset = this.bb.__offset(this.bb_pos, 10);
+  return offset ? new Uint8Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
 message.Frame.startFrame = function(builder) {
@@ -844,7 +853,7 @@ message.StreamMessage.prototype.message = function(obj) {
  */
 message.StreamMessage.prototype.timestamp = function() {
   var offset = this.bb.__offset(this.bb_pos, 12);
-  return offset ? this.bb.readInt64(this.bb_pos + offset) : flatbuffers.Long.ZERO;
+  return offset ? this.bb.readInt64(this.bb_pos + offset) : this.bb.createLong(0, 0);
 };
 
 /**
@@ -891,7 +900,7 @@ message.StreamMessage.addMessage = function(builder, messageOffset) {
  * @param {flatbuffers.Long} timestamp
  */
 message.StreamMessage.addTimestamp = function(builder, timestamp) {
-  builder.addFieldInt64(4, timestamp, flatbuffers.Long.ZERO);
+  builder.addFieldInt64(4, timestamp, builder.createLong(0, 0));
 };
 
 /**
