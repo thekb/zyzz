@@ -64,6 +64,8 @@ const (
 	STOP_STREAM = `UPDATE stream A
 				SET A.status=$1, A.ended_at=CURRENT_TIMESTAMP
 				WHERE A.short_id=$2;`
+	GET_STREAM_FOR_USER_SHORT_ID = `select S.* from stream S inner join users U on S.creator_id = U.id
+				and U.short_id = $1 and S.status=1;`
 )
 
 type Stream struct {
@@ -202,4 +204,13 @@ func DecrementActiveListenersCount(d *sqlx.DB, short_id string) error {
 		fmt.Println("unable to update active listeners count:", err)
 	}
 	return err
+}
+
+func GetUserActiveStream(d *sqlx.DB, short_id string) (Stream, error) {
+	var stream Stream
+	err := db.Get(d, GET_STREAM_FOR_USER_SHORT_ID, &stream, short_id)
+	if err != nil {
+		fmt.Println("unable to get stream:", err)
+	}
+	return stream, err
 }

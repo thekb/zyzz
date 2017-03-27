@@ -31,10 +31,10 @@ type User struct {
 	CreatedAt   time.Time `db:"created_at" json:"created_at"`
 	Published   int `db:"published" json:"published"`
 	Subscribed  int `db:"subscribed" json:"subscribed"`
-	Email       string `db:"email" json:"email"`
+	Email       string `db:"email" json:"_"`
 	NickName    string `db:"nickname" json:"nickname"`
 	AvatarURL   string `db:"avatarurl" json:"avatarurl"`
-	FBId        string `db:"fbid" json:"fbid"`
+	FBId        string `db:"fbid" json:"_"`
 	AccessToken string `db:"access_token" json:"_"`
 }
 
@@ -46,12 +46,12 @@ func CreateUser(d *sqlx.DB, user *User) (int64, error) {
 	return id, err
 }
 
-func UpdateUser(d *sqlx.DB, user *User) (int64, error) {
+func UpdateUser(d *sqlx.DB, user *User) (error) {
 	err := db.UpdateObj(d, UPDATE_USER, user)
 	if err != nil {
 		fmt.Println("unable to update user:", err)
 	}
-	return 1, err
+	return err
 }
 
 func GetUserForShortId(d *sqlx.DB, short_id string) (User, error) {
