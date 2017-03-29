@@ -345,9 +345,9 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 	case m.MessageUnSubscribe:
 		fmt.Println("handling unsubscribe")
 		if ctx.active {
-			//models.DecrementActiveListenersCount(db, streamId)
-			//actMsg := ctx.GetStreamActilveListenersMessage(db, streamId, eventId)
-			//ctx.pushMessage(ActiveListenerHeader, actMsg)
+			models.DecrementActiveListenersCount(db, streamId)
+			actMsg := ctx.GetStreamActiveListenersMessage(ctx.db, ctx.streamId, ctx.eventId)
+			ctx.pushMessage(ActiveListenerHeader, actMsg)
 			ctx.stream = nil
 			ctx.active = false
 			ctx.closeCopy <- true
