@@ -6,8 +6,8 @@ import (
 
 	ws "github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
-	"gopkg.in/kataras/iris.v6"
 	"github.com/thekb/zyzz/db/models"
+	"gopkg.in/kataras/iris.v6"
 )
 
 type Control struct {
@@ -63,7 +63,7 @@ func (c *Control) Serve(ctx *iris.Context) {
 	var in []byte
 	// read from websocket and push to stream
 	for {
-		// fmt.Println("reading message")
+		fmt.Println("reading message")
 		_, in, err = wsc.ReadMessage()
 		if err != nil {
 			// if websocket connection is closed break out of the read loop
