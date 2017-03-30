@@ -3,6 +3,8 @@ package control
 import (
 	"fmt"
 
+	"time"
+
 	"github.com/go-mangos/mangos"
 	"github.com/go-mangos/mangos/protocol/push"
 	"github.com/go-mangos/mangos/protocol/sub"
@@ -12,14 +14,13 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/thekb/zyzz/db/models"
 	m "github.com/thekb/zyzz/message"
-	"time"
 )
 
 var (
-	PauseHeader = []byte("p|")
-	FrameHeader = []byte("f|")
-	StopHeader = []byte("s|")
-	CommentHeader = []byte("c|")
+	PauseHeader          = []byte("p|")
+	FrameHeader          = []byte("f|")
+	StopHeader           = []byte("s|")
+	CommentHeader        = []byte("c|")
 	ActiveListenerHeader = []byte("a|")
 )
 
@@ -35,9 +36,9 @@ type ControlContext struct {
 	closeCopy chan bool     // channel for closing sub socket
 	active    bool          // if stream is active on current control context
 	builder   *fb.Builder   // flat buffer builder for context
-	streamId  string 	// StreamId for stream
-	eventId	  string	// EventId of event
-	db 	  *sqlx.DB	// pointer to the db instance
+	streamId  string        // StreamId for stream
+	eventId   string        // EventId of event
+	db        *sqlx.DB      // pointer to the db instance
 }
 
 // closes control context
@@ -92,7 +93,7 @@ func (ctx *ControlContext) SetupSubSocket() error {
 		return err
 	}
 	// set receive deadline to 10 ms
-	err = ctx.sub.SetOption(mangos.OptionRecvDeadline, time.Millisecond * 10)
+	err = ctx.sub.SetOption(mangos.OptionRecvDeadline, time.Millisecond*10)
 	if err != nil {
 		fmt.Println("unable to set recv deadline:", err)
 	}
@@ -122,7 +123,7 @@ func (ctx *ControlContext) CopyToWS() {
 	var err error
 	defer ctx.sub.Close()
 
-	COPY:
+COPY:
 	for {
 		select {
 		// close go routine
@@ -253,11 +254,11 @@ func (ctx *ControlContext) HandleStreamMessage(db *sqlx.DB, msg []byte) {
 			// set stream
 			ctx.stream = stream
 			// set publish true
-			if !ctx.UserAllowedToPublish() {
-				fmt.Println("user not allowed to broadcast")
-				ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, STREAM_NOT_ALLOWED))
-				return
-			}
+			// if !ctx.UserAllowedToPublish() {
+			// 	fmt.Println("user not allowed to broadcast")
+			// 	ctx.sendMessageToClient(ctx.getStreamResponse(streamId, eventId, STREAM_NOT_ALLOWED))
+			// 	return
+			// }
 			ctx.publish = true
 			// setup push socket
 			err = ctx.SetupPushSocket()
