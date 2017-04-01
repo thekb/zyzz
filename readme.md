@@ -293,10 +293,10 @@ required features
 Starting up with postgres:
 Install postgres and start postgres.
 Run these commands once postgres is up and running.
-
+```
 psql
 create database zyzz;
 \q
 psql zyzz
 create user postgres with password 'melcow';
-
+```
