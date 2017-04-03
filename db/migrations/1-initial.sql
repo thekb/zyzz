@@ -1,7 +1,7 @@
 -- +migrate Up
 create table stream_server(
-    id integer primary key autoincrement,
-    short_id text not null,
+    id serial primary key,
+    short_id text not null unique,
     name text not null,
     hostname text not null,
     internal_ip text not null,
@@ -9,11 +9,11 @@ create table stream_server(
 );
 
 create table users(
-    id integer primary key autoincrement,
-    short_id text not null,
+    id serial primary key,
+    short_id text not null unique,
     name text not null,
-    description not null,
-    created_at datetime not null default current_timestamp,
+    description text not null,
+    created_at timestamp not null default current_timestamp,
     published int not null default 0,
     subscribed int not null default 0
 );
