@@ -6,6 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/ventu-io/go-shortid"
 	"gopkg.in/redis.v5"
+	"gopkg.in/kataras/iris.v6"
 )
 
 const (
@@ -60,4 +61,17 @@ func initializeShortId() {
 func getNewShortId() string {
 	shortId, _ := shortIdGenerator.Generate()
 	return shortId
+}
+
+func getUserId(ctx *iris.Context, r *redis.Client) (int, error) {
+	var userId int
+	var err error
+	userId, err = ctx.Session().GetInt("id")
+	if err != nil {
+		sessionHeader := ctx.RequestHeader("X-Session-Token")
+		redisValue := r.Get(sessionHeader)
+		userId, err := redisValue.Int64()
+		return int(userId), err
+	}
+	return userId, err
 }

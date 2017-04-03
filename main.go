@@ -162,7 +162,7 @@ func main() {
 	cricbuzzParty := app.Party("/api/cricbuzz")
 	cricbuzzParty.Handle("GET", "/:id", &api.GetCricketScores{api.Common{DB:d, R:R}})
 
-	app.Handle("GET", "/control", &control.Control{DB:d})
+	app.Handle("GET", "/control", &control.Control{DB:d, R:R})
 
 	if *debug{
 		fmt.Println("enabling profling")

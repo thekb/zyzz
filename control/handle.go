@@ -8,10 +8,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/kataras/iris.v6"
 	"github.com/thekb/zyzz/db/models"
+	"gopkg.in/redis.v5"
 )
 
 type Control struct {
 	DB *sqlx.DB
+	R *redis.Client
 }
 
 var upgrader = ws.Upgrader{
@@ -21,7 +23,7 @@ var upgrader = ws.Upgrader{
 }
 
 // returns logged in user id
-func (c *Control) GetUserId(ctx *iris.Context) (int, error) {
+func (c *Control) GetUserId(ctx *iris.Context, r *redis.Client) (int, error) {
 	var userId int
 	var err error
 
@@ -35,6 +37,12 @@ func (c *Control) GetUserId(ctx *iris.Context) (int, error) {
 	*/
 
 	userId, err = ctx.Session().GetInt("id")
+	if err != nil {
+		sessionHeader := ctx.RequestHeader("X-Session-Token")
+		redisValue := r.Get(sessionHeader)
+		userId, err := redisValue.Int64()
+		return int(userId), err
+	}
 	return userId, err
 }
 
@@ -51,7 +59,7 @@ func (c *Control) Serve(ctx *iris.Context) {
 	}
 	// upgrade to websocket end
 	var userId int
-	userId, err = c.GetUserId(ctx)
+	userId, err = c.GetUserId(ctx, c.R)
 	if err != nil {
 		fmt.Println("user id not found, publish not allowed:", err)
 	}

@@ -127,7 +127,7 @@ func (atv *AppTokenVerify) Serve(ctx *iris.Context) {
 			uuid4 := uuid.NewV4()
 			tokenInfo.AccessToken = uuid4.String()
 			tokenInfo.User = user
-			atv.R.Set(uuid4.String(), 1, 0)
+			atv.R.Set(uuid4.String(), user.Id, 0)
 			ctx.JSON(iris.StatusOK, Response{Data:tokenInfo})
 			return
 			//atv.R.Set()
