@@ -124,10 +124,10 @@ func (atv *AppTokenVerify) Serve(ctx *iris.Context) {
 			if err != nil {
 				fmt.Println("error creating or updating user", err)
 			}
-			nameSpace, _ := uuid.FromString("3cfbc72e-f769-4d89-8623-6796b76c45e0")
-			uuid5 := uuid.NewV5(nameSpace, "shortpitch.live")
-			tokenInfo.AccessToken = uuid5.String()
+			uuid4 := uuid.NewV4()
+			tokenInfo.AccessToken = uuid4.String()
 			tokenInfo.User = user
+			atv.R.Set(uuid4.String(), 1, 0)
 			ctx.JSON(iris.StatusOK, Response{Data:tokenInfo})
 			return
 			//atv.R.Set()
@@ -169,10 +169,10 @@ func (atv *AppTokenVerify) Serve(ctx *iris.Context) {
 			if err != nil {
 				fmt.Println("error creating or updating user", err)
 			}
-			nameSpace, _ := uuid.FromString("3cfbc72e-f769-4d89-8623-6796b76c45e0")
-			uuid5 := uuid.NewV5(nameSpace, "shortpitch.live")
-			tokenInfo.AccessToken = uuid5.String()
+			uuid4 := uuid.NewV4()
+			tokenInfo.AccessToken = uuid4.String()
 			tokenInfo.User = user
+			atv.R.Set(uuid4.String(), 1, 0)
 			ctx.JSON(iris.StatusOK, Response{Data:tokenInfo})
 			return
 		}

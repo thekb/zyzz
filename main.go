@@ -25,11 +25,32 @@ const (
 	CERT_PATH = "/etc/letsencrypt/live/shortpitch.live/fullchain.pem"
 	KEY_PATH = "/etc/letsencrypt/live/shortpitch.live/privkey.pem"
 )
+var R *redis.Client
+
+func init() {
+	// initialize redis pool
+	R = redis.NewClient(&redis.Options{
+		Network: REDIS_NETWORK,
+		Addr: REDIS_ADDRESS,
+		PoolSize: 100,
+	})
+	_, err := R.Ping().Result()
+	if err != nil {
+		fmt.Println("unable to connect to redis:", err)
+		return
+	}
+}
 
 func sessionMiddleware(ctx *iris.Context) {
 	if _, err := ctx.Session().GetInt("id"); err != nil {
-		ctx.JSON(iris.StatusUnauthorized, iris.Map{})
-		return // don't call original handler
+		sessionHeader := ctx.RequestHeader("X-Session-Token")
+		redisValue := R.Get(sessionHeader)
+		if _, err := redisValue.Int64(); err != nil {
+			fmt.Println("redis val ", redisValue)
+			ctx.JSON(iris.StatusUnauthorized, iris.Map{})
+			return // don't call original handler
+		}
+		ctx.Next()
 	}
 	ctx.Next()
 }
@@ -48,19 +69,9 @@ func main() {
 		fmt.Println("unable to connect to db:", err)
 		return
 	}
-	// initialize redis pool
-	r := redis.NewClient(&redis.Options{
-		Network: REDIS_NETWORK,
-		Addr: REDIS_ADDRESS,
-		PoolSize: 100,
-	})
-	_, err = r.Ping().Result()
-	if err != nil {
-		fmt.Println("unable to connect to redis:", err)
-		return
-	}
+
 	// start event tickers in background
-	api.StartEventTickers(d, r)
+	api.StartEventTickers(d, R)
 
 	// setup sessions
 	session := sessions.New(sessions.Config{
@@ -112,44 +123,44 @@ func main() {
 	// auth api
 	authapi := app.Party("/auth")
 	authapi.Get("/:provider", api.Authenticate)
-	authapi.Handle("GET", "/:provider/callback", &api.AuthCallback{api.Common{DB:d, R:r}})
-	authapi.Handle("POST", "/tokenverify", &api.AppTokenVerify{api.Common{DB:d, R:r}})
+	authapi.Handle("GET", "/:provider/callback", &api.AuthCallback{api.Common{DB:d, R:R}})
+	authapi.Handle("POST", "/tokenverify", &api.AppTokenVerify{api.Common{DB:d, R:R}})
 
 	// user api
 	userApi := app.Party("/api/user", sessionMiddleware)
-	userApi.Handle("GET", "/", &api.CreateUser{api.Common{DB:d, R:r}})
-	userApi.Handle("GET", "/:id", &api.GetUser{api.Common{DB:d, R:r}})
-	userApi.Handle("PUT", "/:id", &api.UpdateUser{api.Common{DB:d, R:r}})
-	userApi.Handle("GET", "/:id/streams", &api.GetUserStream{api.Common{DB:d, R:r}})
+	userApi.Handle("GET", "/", &api.CreateUser{api.Common{DB:d, R:R}})
+	userApi.Handle("GET", "/:id", &api.GetUser{api.Common{DB:d, R:R}})
+	userApi.Handle("PUT", "/:id", &api.UpdateUser{api.Common{DB:d, R:R}})
+	userApi.Handle("GET", "/:id/streams", &api.GetUserStream{api.Common{DB:d, R:R}})
 
 	//user stream
 	streamApi := app.Party("/api/streams")
-	streamApi.Handle("GET", "/:id/current", &api.GetCurrentUserStream{api.Common{DB:d, R:r}})
+	streamApi.Handle("GET", "/:id/current", &api.GetCurrentUserStream{api.Common{DB:d, R:R}})
 
 
 	// event api no auth
 	eventApiNoAuth := app.Party("/api/event")
-	eventApiNoAuth.Handle("GET", "/", &api.GetEvents{api.Common{DB:d, R:r}})
-	eventApiNoAuth.Handle("GET", "/:id/stream", &api.GetEventStreams{api.Common{DB:d, R:r}})
+	eventApiNoAuth.Handle("GET", "/", &api.GetEvents{api.Common{DB:d, R:R}})
+	eventApiNoAuth.Handle("GET", "/:id/stream", &api.GetEventStreams{api.Common{DB:d, R:R}})
 
 	// event api auth
 	eventApi := app.Party("/api/event", sessionMiddleware)
-	eventApi.Handle("POST", "/", &api.CreateEvent{api.Common{DB:d, R:r}})
-	eventApi.Handle("PUT", "/:id", &api.UpdateEvent{api.Common{DB:d, R:r}})
-	eventApi.Handle("POST", "/:id/stream", &api.CreateStream{api.Common{DB:d, R:r}})
+	eventApi.Handle("POST", "/", &api.CreateEvent{api.Common{DB:d, R:R}})
+	eventApi.Handle("PUT", "/:id", &api.UpdateEvent{api.Common{DB:d, R:R}})
+	eventApi.Handle("POST", "/:id/stream", &api.CreateStream{api.Common{DB:d, R:R}})
 
 	//stream server api
 	streamServerApi := app.Party("/api/streamserver")
-	streamServerApi.Handle("POST", "/", &api.CreateStreamServer{api.Common{DB:d, R:r}})
-	streamServerApi.Handle("GET", "/:id", &api.GetStreamServer{api.Common{DB:d, R:r}})
+	streamServerApi.Handle("POST", "/", &api.CreateStreamServer{api.Common{DB:d, R:R}})
+	streamServerApi.Handle("GET", "/:id", &api.GetStreamServer{api.Common{DB:d, R:R}})
 
 	streamParty := app.Party("/stream", sessionMiddleware)
-	streamParty.Handle("GET", "/ws/publish/:id", &stream.PublishStream{api.Common{DB:d, R:r}})
-	streamParty.Handle("GET", "/ws/subscribe/:id", &stream.WebSocketSubscriber{api.Common{DB:d, R:r}})
-	streamParty.Handle("GET", "/http/subscribe/:id", &stream.SubscribeStream{api.Common{DB:d, R:r}})
+	streamParty.Handle("GET", "/ws/publish/:id", &stream.PublishStream{api.Common{DB:d, R:R}})
+	streamParty.Handle("GET", "/ws/subscribe/:id", &stream.WebSocketSubscriber{api.Common{DB:d, R:R}})
+	streamParty.Handle("GET", "/http/subscribe/:id", &stream.SubscribeStream{api.Common{DB:d, R:R}})
 
 	cricbuzzParty := app.Party("/api/cricbuzz")
-	cricbuzzParty.Handle("GET", "/:id", &api.GetCricketScores{api.Common{DB:d, R:r}})
+	cricbuzzParty.Handle("GET", "/:id", &api.GetCricketScores{api.Common{DB:d, R:R}})
 
 	app.Handle("GET", "/control", &control.Control{DB:d})
 
