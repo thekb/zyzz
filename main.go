@@ -113,6 +113,7 @@ func main() {
 	authapi := app.Party("/auth")
 	authapi.Get("/:provider", api.Authenticate)
 	authapi.Handle("GET", "/:provider/callback", &api.AuthCallback{api.Common{DB:d, R:r}})
+	authapi.Handle("POST", "/tokenverify", &api.AppTokenVerify{api.Common{DB:d, R:r}})
 
 	// user api
 	userApi := app.Party("/api/user", sessionMiddleware)
