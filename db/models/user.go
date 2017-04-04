@@ -12,7 +12,7 @@ const (
 			VALUES (:short_id, :name, :description, :email, :nickname, :avatarurl, :fbid, :access_token)
 			returning id;`
 	UPDATE_USER = `UPDATE users set name=:name, description=:description, email=:email, nickname=:nickname,
-	 		avatarurl=:avatarurl, access_token=:access_token, username=:username
+	 		avatarurl=:avatarurl, access_token=:access_token, username=:username, language=:language
 	 		WHERE users.short_id=:short_id;`
 	GET_USER_SHORT_ID = `SELECT A.* FROM users A
 			WHERE A.short_id=$1;`
@@ -40,6 +40,7 @@ type User struct {
 	FBId        string `db:"fbid" json:"fbid"`
 	AccessToken string `db:"access_token" json:"_"`
 	UserName    string `db:"username" json:"username"`
+	Language    string `db:"language" json:"language"`
 }
 
 func CreateUser(d *sqlx.DB, user *User) (int64, error) {

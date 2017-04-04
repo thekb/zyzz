@@ -52,7 +52,6 @@ func (cuh CreateUser) Serve(ctx *iris.Context)  {
 
 func (guh GetUser) Serve(ctx *iris.Context) {
 	userId, err := getUserId(ctx, guh.R)
-	fmt.Println("user id is ", userId)
 	user, err := models.GetUserForId(guh.DB, int64(userId))
 	if err != nil {
 		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})

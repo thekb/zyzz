@@ -11,6 +11,10 @@ type CreateStream struct {
 	Common
 }
 
+type UpdateStream struct {
+	Common
+}
+
 type GetStream struct {
 	Common
 }
@@ -39,11 +43,15 @@ func (cs *CreateStream) Serve(ctx *iris.Context) {
 	stream.EventId = event_shortId
 	defaultStreamServer := models.GetDefaultStreamServer(cs.DB)
 	user_id, err := getUserId(ctx, cs.R)
+	user, err := models.GetUserForId(cs.DB, int64(user_id))
 	stream.CreatorId = user_id
 	stream.StreamServerId = defaultStreamServer.Id
 	stream.TransportUrl = fmt.Sprintf(TRANSPORT_URL_FORMAT, stream.ShortId)
 	stream.PublishUrl = fmt.Sprintf(PUBLISH_URL_FORMAT, defaultStreamServer.HostName, stream.ShortId)
 	stream.SubscribeUrl = fmt.Sprintf(SUBSCRIBE_URL_FORMAT, defaultStreamServer.HostName, stream.ShortId)
+	if err == nil {
+		stream.Language = user.Language
+	}
 	id, err := models.CreateStream(cs.DB, &stream)
 	if err != nil {
 		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
@@ -68,6 +76,30 @@ func (gs *GetStream) Serve(ctx *iris.Context) {
 		return
 	}
 	ctx.JSON(iris.StatusOK, &Response{Data:stream})
+	return
+}
+
+func (us *UpdateStream) Serve(ctx *iris.Context) {
+	shortId := ctx.GetString(SHORT_ID)
+
+	stream, err := models.GetStreamForShortId(us.DB, shortId)
+	if err != nil {
+		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		return
+	}
+	err = ctx.ReadJSON(&stream)
+	if err != nil {
+		ctx.Log(iris.ProdMode, "unable to decode request %s", err.Error())
+		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		return
+	}
+	err = models.UpdateStream(us.DB, &stream)
+	if err != nil {
+		ctx.Log(iris.ProdMode, "unable to update stream %s", err.Error())
+		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		return
+	}
+	ctx.JSON(iris.StatusOK, Response{Data:stream})
 	return
 }
 

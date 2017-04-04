@@ -139,7 +139,7 @@ func main() {
 	//user stream
 	streamApi := app.Party("/api/streams")
 	streamApi.Handle("GET", "/:id/current", &api.GetCurrentUserStream{api.Common{DB:d, R:R}})
-
+	streamApi.Handle("PUT", "/:id", &api.UpdateStream{api.Common{DB:d, R:R}})
 
 	// event api no auth
 	eventApiNoAuth := app.Party("/api/event")

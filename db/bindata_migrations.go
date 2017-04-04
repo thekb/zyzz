@@ -5,6 +5,7 @@
 // db/migrations/3-event.sql
 // db/migrations/4-stream-activelisteners.sql
 // db/migrations/5-username.sql
+// db/migrations/6-user-stream.sql
 // DO NOT EDIT!
 
 package db
@@ -172,6 +173,26 @@ func dbMigrations5UsernameSql() (*asset, error) {
 	return a, nil
 }
 
+var _dbMigrations6UserStreamSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x94\x8f\x3d\x0e\xc2\x30\x0c\x46\xf7\x9e\xe2\xdb\x3a\xd0\x9e\xa0\x2b\x57\x60\x46\x26\x31\x01\xc9\x49\x2a\xc7\x16\x1c\x9f\x81\xa5\x84\x1f\x89\xd9\xf6\xf3\x7b\xf3\x8c\x5d\xbe\x26\x25\x63\x1c\xd6\x81\xc4\x58\x61\x74\x12\x86\x37\xd6\x36\x00\x00\xc5\x88\x50\xc5\x73\x81\x50\x49\x4e\x89\x61\x7c\x37\x94\x6a\x28\x2e\x82\xc8\x67\x72\x31\x8c\xe3\x32\xbc\x40\x9a\x29\x53\xfe\x9b\x32\xf5\x17\x99\x2c\x5c\x8e\xad\xba\x86\x9f\xbf\xb7\x3d\xfb\x7a\x2b\x5d\x91\xf2\xb3\x28\x6a\x5d\x7b\x99\xef\xe6\x9f\xb6\xa7\xb7\xc9\x56\x71\x79\x04\x00\x00\xff\xff\xb2\x3f\x7f\x26\x58\x01\x00\x00")
+
+func dbMigrations6UserStreamSqlBytes() ([]byte, error) {
+	return bindataRead(
+		_dbMigrations6UserStreamSql,
+		"db/migrations/6-user-stream.sql",
+	)
+}
+
+func dbMigrations6UserStreamSql() (*asset, error) {
+	bytes, err := dbMigrations6UserStreamSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "db/migrations/6-user-stream.sql", size: 344, mode: os.FileMode(420), modTime: time.Unix(1491337051, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -229,6 +250,7 @@ var _bindata = map[string]func() (*asset, error){
 	"db/migrations/3-event.sql": dbMigrations3EventSql,
 	"db/migrations/4-stream-activelisteners.sql": dbMigrations4StreamActivelistenersSql,
 	"db/migrations/5-username.sql": dbMigrations5UsernameSql,
+	"db/migrations/6-user-stream.sql": dbMigrations6UserStreamSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -278,6 +300,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"3-event.sql": &bintree{dbMigrations3EventSql, map[string]*bintree{}},
 			"4-stream-activelisteners.sql": &bintree{dbMigrations4StreamActivelistenersSql, map[string]*bintree{}},
 			"5-username.sql": &bintree{dbMigrations5UsernameSql, map[string]*bintree{}},
+			"6-user-stream.sql": &bintree{dbMigrations6UserStreamSql, map[string]*bintree{}},
 		}},
 	}},
 }}

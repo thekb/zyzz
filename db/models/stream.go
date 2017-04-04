@@ -29,11 +29,11 @@ const (
 	CREATE_STREAM = `INSERT INTO stream (
 				short_id, name, description,
 				publish_url, subscribe_url, transport_url,
-	 			stream_server_id, creator_id, event_id)
+	 			stream_server_id, creator_id, event_id, language)
 				VALUES (
 				:short_id, :name, :description,
 				:publish_url, :subscribe_url, :transport_url,
-				:stream_server_id, :creator_id, :event_id)
+				:stream_server_id, :creator_id, :event_id, :language)
 				returning id;`
 
 	GET_STREAM_SHORT_ID = `SELECT A.* FROM stream A
@@ -66,6 +66,9 @@ const (
 				WHERE A.short_id=$2;`
 	GET_STREAM_FOR_USER_SHORT_ID = `select S.* from stream S inner join users U on S.creator_id = U.id
 				and U.short_id = $1 and S.status=1;`
+
+	UPDATE_STREAM = `UPDATE stream SET name=:name, description=:description, language=:language,
+				match_source=:match_source WHERE stream.short_id=:short_id`
 )
 
 type Stream struct {
@@ -85,6 +88,8 @@ type Stream struct {
 	TransportUrl    string `db:"transport_url" json:"transport_url"`
 	EventId		string `db:"event_id" json:"event_id"`
 	User 		User `db:"_" json:"user"`
+	Language        string `db:"language" json:"language"`
+	MatchSource string `db:"match_source" json:"match_source"`
 }
 
 type StreamServer struct {
@@ -213,4 +218,12 @@ func GetUserActiveStream(d *sqlx.DB, short_id string) (Stream, error) {
 		fmt.Println("unable to get stream:", err)
 	}
 	return stream, err
+}
+
+func UpdateStream(d *sqlx.DB, stream *Stream) (error) {
+	err := db.UpdateObj(d, UPDATE_STREAM, stream)
+	if err != nil {
+		fmt.Println("unable to update stream:", err)
+	}
+	return err
 }
