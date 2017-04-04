@@ -16,6 +16,8 @@ const (
 	 		WHERE users.short_id=:short_id;`
 	GET_USER_SHORT_ID = `SELECT A.* FROM users A
 			WHERE A.short_id=$1;`
+	GET_USER_USER_NAME = `SELECT A.* FROM users A
+			WHERE A.username=$1;`
 	GET_USER_ID = `SELECT A.* FROM users A
 			WHERE A.id=$1;`
 	GET_DEFAULT_USER = `SELECT A.* FROM users A
@@ -64,6 +66,16 @@ func GetUserForShortId(d *sqlx.DB, short_id string) (User, error) {
 	}
 	return user, err
 }
+
+func GetUserForName(d *sqlx.DB, user_name string) (User, error) {
+	var user User
+	err := db.Get(d, GET_USER_USER_NAME, &user, user_name)
+	if err != nil {
+		fmt.Println("unable to fetch user:", err)
+	}
+	return user, err
+}
+
 
 func GetUserForFBId(d *sqlx.DB, fbid string) (User, error) {
 	var user User

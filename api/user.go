@@ -14,6 +14,11 @@ type GetUser struct {
 	Common
 }
 
+type GetUserFromName struct {
+	Common
+}
+
+
 type GetUserStream struct {
 	Common
 }
@@ -46,8 +51,20 @@ func (cuh CreateUser) Serve(ctx *iris.Context)  {
 }
 
 func (guh GetUser) Serve(ctx *iris.Context) {
-	shortId := ctx.GetString(SHORT_ID)
-	user, err := models.GetUserForShortId(guh.DB, shortId)
+	userId, err := getUserId(ctx, guh.R)
+	fmt.Println("user id is ", userId)
+	user, err := models.GetUserForId(guh.DB, int64(userId))
+	if err != nil {
+		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		return
+	}
+	ctx.JSON(iris.StatusOK, Response{Data:user})
+	return
+}
+
+func (guh GetUserFromName) Serve(ctx *iris.Context) {
+	userName := ctx.GetString(SHORT_ID)
+	user, err := models.GetUserForName(guh.DB, userName)
 	if err != nil {
 		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
 		return
