@@ -10,7 +10,6 @@ import (
 	"github.com/markbates/goth/providers/gplus"
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/hex"
 	"net/url"
 	"os"
 	"net/http"
@@ -20,6 +19,7 @@ import (
 	"io"
 	"github.com/jmoiron/sqlx"
 	"github.com/satori/go.uuid"
+	"encoding/hex"
 )
 
 const (
@@ -100,7 +100,7 @@ func (atv *AppTokenVerify) Serve(ctx *iris.Context) {
 		// close response body
 		defer resp.Body.Close()
 		if err != nil {
-			ctx.SetStatusCode(iris.StatusUnauthorized)
+			ctx.SetStatusCode(iris.StatusBadRequest)
 			ctx.Writef(err.Error())
 			return
 		}
@@ -109,13 +109,13 @@ func (atv *AppTokenVerify) Serve(ctx *iris.Context) {
 			bits, err := ioutil.ReadAll(resp.Body)
 			err = json.NewDecoder(bytes.NewReader(bits)).Decode(&gothUser.RawData)
 			if err != nil {
-				ctx.SetStatusCode(iris.StatusUnauthorized)
+				ctx.SetStatusCode(iris.StatusBadRequest)
 				ctx.Writef(err.Error())
 				return
 			}
 			err = fbUserFromReader(bytes.NewReader(bits), &gothUser)
 			if err != nil {
-				ctx.SetStatusCode(iris.StatusUnauthorized)
+				ctx.SetStatusCode(iris.StatusBadRequest)
 				ctx.Writef(err.Error())
 				return
 			}
@@ -132,8 +132,9 @@ func (atv *AppTokenVerify) Serve(ctx *iris.Context) {
 			return
 			//atv.R.Set()
 		} else {
-			ctx.SetStatusCode(iris.StatusUnauthorized)
-			ctx.Writef(err.Error())
+			bits, _ := ioutil.ReadAll(resp.Body)
+			ctx.SetStatusCode(iris.StatusBadRequest)
+			ctx.Writef(string(bits))
 			return
 		}
 
@@ -144,7 +145,7 @@ func (atv *AppTokenVerify) Serve(ctx *iris.Context) {
 		resp, err := client.Do(req)
 		defer resp.Body.Close()
 		if err != nil {
-			ctx.SetStatusCode(iris.StatusUnauthorized)
+			ctx.SetStatusCode(iris.StatusBadRequest)
 			ctx.Writef(err.Error())
 			return
 		}
@@ -154,13 +155,13 @@ func (atv *AppTokenVerify) Serve(ctx *iris.Context) {
 			bits, err := ioutil.ReadAll(resp.Body)
 			err = json.NewDecoder(bytes.NewReader(bits)).Decode(&gothUser.RawData)
 			if err != nil {
-				ctx.SetStatusCode(iris.StatusUnauthorized)
+				ctx.SetStatusCode(iris.StatusBadRequest)
 				ctx.Writef(err.Error())
 				return
 			}
 			err = gplusUserFromReader(bytes.NewReader(bits), &gothUser)
 			if err != nil {
-				ctx.SetStatusCode(iris.StatusUnauthorized)
+				ctx.SetStatusCode(iris.StatusBadRequest)
 				ctx.Writef(err.Error())
 				return
 			}
@@ -175,10 +176,16 @@ func (atv *AppTokenVerify) Serve(ctx *iris.Context) {
 			atv.R.Set(uuid4.String(), 1, 0)
 			ctx.JSON(iris.StatusOK, Response{Data:tokenInfo})
 			return
+		} else {
+			bits, _ := ioutil.ReadAll(resp.Body)
+			ctx.SetStatusCode(iris.StatusBadRequest)
+			ctx.Writef(string(bits))
+			return
 		}
+
 	default:
 		ctx.SetStatusCode(iris.StatusBadRequest)
-		ctx.Writef(err.Error())
+		ctx.Writef("Provider not supported")
 		return
 	}
 }
