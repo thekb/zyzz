@@ -189,15 +189,15 @@ func updateScore(r *redis.Client, cricURL, eventId string) {
 	if err != nil {
 		fmt.Println("Response from cric server failed:", err)
 		return
-	}
-	if resp.StatusCode == http.StatusOK {
-		MatchDetails, err := ReadMatchData(resp.Body)
-		match, err := json.Marshal(MatchDetails)
-		if err == nil {
-
-			err = r.Set(eventId, match, 0).Err()
-			if err != nil {
-				fmt.Println("Error occured while setting in redis", err)
+	} else {
+		if resp.StatusCode == http.StatusOK {
+			MatchDetails, err := ReadMatchData(resp.Body)
+			match, err := json.Marshal(MatchDetails)
+			if err == nil {
+				err = r.Set(eventId, match, 0).Err()
+				if err != nil {
+					fmt.Println("Error occured while setting in redis", err)
+				}
 			}
 		}
 	}
