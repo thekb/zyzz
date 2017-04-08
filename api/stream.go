@@ -1,10 +1,11 @@
 package api
 
 import (
-	"github.com/thekb/zyzz/db/models"
 	"fmt"
-	"gopkg.in/kataras/iris.v6"
+
 	"github.com/thekb/zyzz/control"
+	"github.com/thekb/zyzz/db/models"
+	"gopkg.in/kataras/iris.v6"
 )
 
 type CreateStream struct {
@@ -25,9 +26,8 @@ type GetStreams struct {
 
 const (
 	TRANSPORT_URL_FORMAT = "ipc:///tmp/stream_%s.ipc"
-	PUBLISH_URL_FORMAT = "https://%s/stream/publish/%s/"
+	PUBLISH_URL_FORMAT   = "https://%s/stream/publish/%s/"
 	SUBSCRIBE_URL_FORMAT = "https://%s/stream/subscribe/%s/"
-
 )
 
 func (cs *CreateStream) Serve(ctx *iris.Context) {
@@ -54,7 +54,7 @@ func (cs *CreateStream) Serve(ctx *iris.Context) {
 	}
 	id, err := models.CreateStream(cs.DB, &stream)
 	if err != nil {
-		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
+		ctx.JSON(iris.StatusBadRequest, &Response{Error: err.Error()})
 		return
 	}
 	// setup stream sockets
@@ -63,6 +63,10 @@ func (cs *CreateStream) Serve(ctx *iris.Context) {
 		fmt.Println("unable to setup stream:", err)
 	}
 	stream, _ = models.GetStreamForId(cs.DB, id)
+	user_publish, err := models.GetUserForId(cs.DB, int64(stream.CreatorId))
+	if err == nil {
+		stream.User = user_publish
+	}
 	ctx.JSON(iris.StatusOK, &stream)
 	return
 }
@@ -72,10 +76,10 @@ func (gs *GetStream) Serve(ctx *iris.Context) {
 
 	stream, err := models.GetStreamForShortId(gs.DB, shortId)
 	if err != nil {
-		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
+		ctx.JSON(iris.StatusBadRequest, &Response{Error: err.Error()})
 		return
 	}
-	ctx.JSON(iris.StatusOK, &Response{Data:stream})
+	ctx.JSON(iris.StatusOK, &Response{Data: stream})
 	return
 }
 
@@ -84,22 +88,22 @@ func (us *UpdateStream) Serve(ctx *iris.Context) {
 
 	stream, err := models.GetStreamForShortId(us.DB, shortId)
 	if err != nil {
-		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		ctx.JSON(iris.StatusBadRequest, Response{Error: err.Error()})
 		return
 	}
 	err = ctx.ReadJSON(&stream)
 	if err != nil {
 		ctx.Log(iris.ProdMode, "unable to decode request %s", err.Error())
-		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		ctx.JSON(iris.StatusBadRequest, Response{Error: err.Error()})
 		return
 	}
 	err = models.UpdateStream(us.DB, &stream)
 	if err != nil {
 		ctx.Log(iris.ProdMode, "unable to update stream %s", err.Error())
-		ctx.JSON(iris.StatusBadRequest, Response{Error:err.Error()})
+		ctx.JSON(iris.StatusBadRequest, Response{Error: err.Error()})
 		return
 	}
-	ctx.JSON(iris.StatusOK, Response{Data:stream})
+	ctx.JSON(iris.StatusOK, Response{Data: stream})
 	return
 }
 
@@ -107,9 +111,9 @@ func (gs *GetStreams) Serve(ctx *iris.Context) {
 	event_shortId := ctx.GetString(SHORT_ID)
 	streams, err := models.GetStreams(gs.DB, event_shortId)
 	if err != nil {
-		ctx.JSON(iris.StatusBadRequest, &Response{Error:err.Error()})
+		ctx.JSON(iris.StatusBadRequest, &Response{Error: err.Error()})
 		return
 	}
-	ctx.JSON(iris.StatusOK, &Response{Data:streams})
+	ctx.JSON(iris.StatusOK, &Response{Data: streams})
 	return
 }
