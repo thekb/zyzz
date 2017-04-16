@@ -42,7 +42,8 @@ type ControlContext struct {
 
 // closes control context
 func (ctx *ControlContext) Close() {
-	if ctx.publish == false && ctx.active == false {
+	if ctx.publish == false && ctx.active == true {
+		fmt.Println("In close websocket decreasing listener count")
 		models.DecrementActiveListenersCount(ctx.db, ctx.streamId)
 		actMsg := ctx.GetStreamActiveListenersMessage(ctx.db, ctx.streamId, ctx.eventId)
 		ctx.pushMessage(ActiveListenerHeader, actMsg)
